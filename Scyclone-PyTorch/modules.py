@@ -2,36 +2,22 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class ResidualBlock(nn.Module):
-    """
-    k5s1c256 -> LReLU(a=0.01) -> k5s1c256
-    """
+class ResidualBlock_G(nn.Module):
+    def __init__(self, C: int, lr: float):
+        super(ResidualBlock_G, self).__init__()
 
-    def __init__(self):
-        super(ResidualBlock, self).__init__()
+        # params
+        ## "residual blocks consisting of two convolutional layers with a kernel size five" from Scyclone paper
+        kernel = 5
+
+        # blocks
         conv_block = [
-            nn.Conv1d(256, 256, 5),
-            nn.LeakyReLU(0.01),
-            nn.Conv1d(256, 256, 5),
+            nn.Conv1d(C, C, kernel),
+            nn.LeakyReLU(lr),
+            nn.Conv1d(C, C, kernel),
         ]
-        self.conv_block = nn.Sequential(*conv_block)
 
-    def forward(self, x):
-        return x + self.conv_block(x)
-
-
-class ResidualSNBlock(nn.Module):
-    """
-    k5s1c256 -> LReLU(a=0.2) -> k5s1c256
-    """
-
-    def __init__(self):
-        super(ResidualSNBlock, self).__init__()
-        conv_block = [
-            nn.utils.spectral_norm(nn.Conv1d(256, 256, 5)),
-            nn.LeakyReLU(0.2),
-            nn.utils.spectral_norm(nn.Conv1d(256, 256, 5)),
-        ]
+        # block registration (`*` is array unpack)
         self.conv_block = nn.Sequential(*conv_block)
 
     def forward(self, x):
@@ -43,27 +29,57 @@ class Generator(nn.Module):
     Scyclone Generator
     """
 
-    def __init__(self, ngf, n_residual_blocks=7):
+    def __init__(self):
         super(Generator, self).__init__()
 
-        model = [
-            nn.Conv1d(128, 256, 1),
-            nn.LeakyReLU(0.01),
-        ]
+        # params
+        n_C_freq: int = 128
+        n_C_trunk: int = 256
+        ## "In this study, we set nG and nD to 7 and 6, respectively" from Scyclone paper
+        n_ResBlock_G: int = 7
+        lr: float = 0.01
 
+        # channel adjustment with pointwiseConv
+        ## "We used leaky rectified linear units" from Scyclone paper
+        blocks = [
+            nn.Conv1d(n_C_freq, n_C_trunk, 1),
+            nn.LeakyReLU(lr),
+        ]
         # Residual blocks
-        for _ in range(n_residual_blocks):
-            model += [ResidualBlock()]
-
-        model += [
-            nn.Conv1d(256, 128, 1),
-            nn.LeakyReLU(0.01),
+        blocks += [ResidualBlock_G(n_C_trunk, lr) for _ in range(n_ResBlock_G)]
+        # channel adjustment with pointwiseConv
+        blocks += [
+            nn.Conv1d(n_C_trunk, n_C_freq, 1),
+            nn.LeakyReLU(lr),
         ]
 
-        self.model = nn.Sequential(*model)
+        # block registration (`*` is array unpack)
+        self.model = nn.Sequential(*blocks)
 
     def forward(self, x):
         return self.model(x)
+
+
+class ResidualSNBlock_D(nn.Module):
+    def __init__(self, C: int, lr: float):
+        super(ResidualSNBlock_D, self).__init__()
+
+        # params
+        ## "residual blocks consisting of two convolutional layers with a kernel size five" from Scyclone paper
+        kernel = 5
+
+        # blocks
+        conv_blocks = [
+            nn.utils.spectral_norm(nn.Conv1d(C, C, kernel)),
+            nn.LeakyReLU(lr),
+            nn.utils.spectral_norm(nn.Conv1d(C, C, kernel)),
+        ]
+
+        # block registration (`*` is array unpack)
+        self.conv_blocks = nn.Sequential(*conv_blocks)
+
+    def forward(self, x):
+        return x + self.conv_blocks(x)
 
 
 class Discriminator(nn.Module):
@@ -71,25 +87,37 @@ class Discriminator(nn.Module):
     Scyclone Discriminator
     """
 
-    def __init__(self, ndf):
+    def __init__(self):
         super(Discriminator, self).__init__()
 
-        model = [
-            nn.utils.spectral_norm(nn.Conv1d(128, 256, 1)),
-            nn.LeakyReLU(0.2),
+        # params
+        n_C_freq: int = 128
+        n_C_trunk: int = 256
+        ## "In this study, we set nG and nD to 7 and 6, respectively" from Scyclone paper
+        n_ResBlock_D: int = 6
+        lr: float = 0.2
+
+        # channel adjustment with pointwiseConv
+        ## "We used leaky rectified linear units" from Scyclone paper
+        blocks = [
+            nn.utils.spectral_norm(nn.Conv1d(n_C_freq, n_C_trunk, 1)),
+            nn.LeakyReLU(lr),
         ]
 
         # Residual blocks
-        for _ in range(6):
-            model += [ResidualBlock()]
+        blocks += [ResidualSNBlock_D(n_C_trunk, lr) for _ in range(n_ResBlock_D)]
 
-        model += [
-            nn.utils.spectral_norm(nn.Conv1d(256, 1, 1)),
-            nn.LeakyReLU(0.2),
+        # final compression
+        blocks += [
+            nn.utils.spectral_norm(nn.Conv1d(n_C_trunk, 1, 1)),
+            nn.LeakyReLU(lr),
+            nn.AdaptiveAvgPool1d(1),
         ]
-        model += [nn.AdaptiveAvgPool1d(1)]
 
-        self.model = nn.Sequential(*model)
+        # module registration (`*` is array unpack)
+        self.model = nn.Sequential(*blocks)
 
     def forward(self, x):
-        x = self.model(x)
+        # [todo]
+        # "We add small Gaussian noise following N (0, 0.01) to the input of the discriminator" from Scyclone paper
+        return self.model(x)

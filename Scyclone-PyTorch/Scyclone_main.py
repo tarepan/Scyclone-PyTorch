@@ -5,97 +5,101 @@ import torch
 import pytorch_lightning as pl
 from pytorch_lightning.metrics.functional import accuracy
 from torch.nn import functional as F
-from modules import Generator, Discriminator
+from npvcc2016.PyTorch.Lightning.datamodule.waveform import NpVCC2016DataModule
+
+from .modules import Generator, Discriminator
+
+# codes are inspired by CycleGAN family with PyTorch Lightning https://github.com/HasnainRaz/Fast-AgingGAN/blob/master/gan_module.py
 
 """
 G: Generator
 D: Discriminator
 A2B: map A to B (c.f. B2A)
 """
-# inspired by CycleGAN family https://github.com/HasnainRaz/Fast-AgingGAN/blob/master/gan_module.py
 
 
 class Scyclone(pl.LightningModule):
-    def __init__(
-        self,
-        hidden_dim=128,
-        learning_rate=2.0 * 1e-4,
-        batch_size=32,
-        num_workers=4,
-        **kwargs
-    ):
+    """
+    Scyclone, non-parallel voice conversion model.
+    Origin: Masaya Tanaka, et al.. (2020). Scyclone: High-Quality and Parallel-Data-Free Voice Conversion Using Spectrogram and Cycle-Consistent Adversarial Networks. Arxiv 2005.03334.
+    """
+
+    def __init__(self):
         super().__init__()
+
+        # params
+        ## "λcy and λid were set to 10 and 1 in Eq. 1" in Scyclone paper
+        ## self.weight_adv = 1 // standard
+        self.weight_cycle = 10
+        self.weight_identity = 1
+        ## "m is a parameter of the hinge loss and is set to (...) 0.5 in our experiments" in Scyclone paper
+        self.hinge_offset_D = 0.5
+        self.learning_rate = 2.0 * 1e-4
+        self.batch_size = 32
         self.save_hyperparameters()
 
-        # self.l1 = torch.nn.Linear(28 * 28, self.hparams.hidden_dim)
-        self.G_A2B = Generator(hparams["ngf"], n_residual_blocks=hparams["n_blocks"])
-        self.G_B2A = Generator(hparams["ngf"], n_residual_blocks=hparams["n_blocks"])
-        self.D_A = Discriminator(hparams["ndf"])
-        self.D_B = Discriminator(hparams["ndf"])
+        self.G_A2B = Generator()
+        self.G_B2A = Generator()
+        self.D_A = Discriminator()
+        self.D_B = Discriminator()
 
-        self.mnist_train = None
-        self.mnist_val = None
+        # self.mnist_train = None
+        # self.mnist_val = None
 
     def forward(self, x):
-        x = x.view(x.size(0), -1)
-        x = torch.relu(self.l1(x))
-        x = torch.relu(self.l2(x))
-        return x
+        return self.G_A2B(x)
 
     def training_step(self, batch, batch_idx, optimizer_idx):
+        """
+        Min-Max adversarial training (G:D = 1:1)
+        """
         # result = pl.TrainResult(minimize=loss)
         # result.log("train_loss", loss)
         real_A, real_B = batch
 
         # Generator training
         if optimizer_idx == 0:
-            # identity mapping losses
-            ## L1 loss (from Scyclone paper eq.1)
-            weight_identity = self.hparams["identity_weight"]
-            same_B = self.G_A2B(real_B)
-            loss_identity_B = F.l1_loss(same_B, real_B) * weight_identity
-            same_A = self.G_B2A(real_A)
-            loss_identity_A = F.l1_loss(same_A, real_A) * weight_identity
-
-            # Generator adversarial loss
+            # Generator adversarial losses
+            ## hinge loss (from Scyclone paper eq.1)
             """
             change to hinge loss
             """
             fake_B = self.G_A2B(real_A)
-            pred_fake = self.D_B(fake_B)
-            loss_GAN_A2B = (
-                F.mse_loss(pred_fake, torch.ones(pred_fake.shape).type_as(pred_fake))
-                * self.hparams["adv_weight"]
-            )
+            pred_fake_B = self.D_B(fake_B)
+            loss_GAN_A2B = torch.mean(F.relu(-1.0 * pred_fake_B))
             fake_A = self.G_B2A(real_B)
-            pred_fake = self.D_A(fake_A)
-            loss_GAN_B2A = (
-                F.mse_loss(pred_fake, torch.ones(pred_fake.shape).type_as(pred_fake))
-                * self.hparams["adv_weight"]
-            )
+            pred_fake_A = self.D_A(fake_A)
+            loss_GAN_B2A = torch.mean(F.relu(-1.0 * pred_fake_A))
 
-            # cycle consistency loss
+            # cycle consistency losses
             ## L1 loss (from Scyclone paper eq.1)
-            weight_cycle = self.hparams["cycle_weight"]
             cycled_A = self.G_B2A(fake_B)
-            loss_cycle_ABA = F.l1_loss(cycled_A, real_A) * weight_cycle
+            loss_cycle_ABA = F.l1_loss(cycled_A, real_A)
             cycled_B = self.G_A2B(fake_A)
-            loss_cycle_BAB = F.l1_loss(cycled_B, real_B) * weight_cycle
+            loss_cycle_BAB = F.l1_loss(cycled_B, real_B)
+
+            # identity mapping losses
+            ## L1 loss (from Scyclone paper eq.1)
+            same_B = self.G_A2B(real_B)
+            loss_identity_B = F.l1_loss(same_B, real_B)
+            same_A = self.G_B2A(real_A)
+            loss_identity_A = F.l1_loss(same_A, real_A)
 
             # Total loss
-            g_loss = (
-                loss_identity_A
-                + loss_identity_B
-                + loss_GAN_A2B
+            loss_G = (
+                loss_GAN_A2B
                 + loss_GAN_B2A
-                + loss_cycle_ABA
-                + loss_cycle_BAB
+                + loss_cycle_ABA * self.hparams["weight_cycle"]
+                + loss_cycle_BAB * self.hparams["weight_cycle"]
+                + loss_identity_A * self.hparams["weight_identity"]
+                + loss_identity_B * self.hparams["weight_identity"]
             )
 
-            output = {"loss": g_loss, "log": {"Loss/Generator": g_loss}}
-            self.generated_B = fake_B
-            self.generated_A = fake_A
-
+            output = {"loss": loss_G, "log": {"Loss/Generator": loss_G}}
+            ## registration for Discriminator loop
+            self.fake_B = fake_B
+            self.fake_A = fake_A
+            ## Is this needed...?
             self.real_B = real_B
             self.real_A = real_A
 
@@ -125,39 +129,39 @@ class Scyclone(pl.LightningModule):
 
         # Discriminator training
         if optimizer_idx == 1:
+            m = self.hinge_offset_D
+
+            ## ones:  torch.ones( pred_real.shape).type_as(pred_real)
+            ## zeros: torch.zeros(pred_fake.shape).type_as(pred_fake)
+
+            # Adversarial loss: hinge loss (from Scyclone paper eq.1)
             # D_A
             ## Real loss
-            pred_real = self.D_A(real_A)
-            loss_D_real = F.mse_loss(
-                pred_real, torch.ones(pred_real.shape).type_as(pred_real)
-            )
+            ## [todo] edge 16frame cut
+            pred_A_real = self.D_A(real_A)
+            loss_D_A_real = torch.mean(F.relu(m - pred_A_real))
             ## Fake loss
-            fake_A = self.generated_A
-            pred_fake = self.D_A(fake_A.detach())
-            loss_D_fake = F.mse_loss(
-                pred_fake, torch.zeros(pred_fake.shape).type_as(pred_fake)
-            )
+            ## [todo] edge 16frame cut
+            pred_A_fake = self.D_A(self.fake_A.detach())
+            loss_D_A_fake = torch.mean(F.relu(m + pred_A_fake))
             ## D_A total loss
-            loss_D_A = (loss_D_real + loss_D_fake) * 0.5
+            loss_D_A = loss_D_A_real + loss_D_A_fake
 
             # D_B
             ## Real loss
-            pred_real = self.D_B(real_B)
-            loss_D_real = F.mse_loss(
-                pred_real, torch.ones(pred_real.shape).type_as(pred_real)
-            )
+            ## [todo] edge 16frame cut
+            pred_B_real = self.D_B(real_B)
+            loss_D_B_real = torch.mean(F.relu(m - pred_B_real))
             ## Fake loss
-            fake_B = self.generated_B
-            pred_fake = self.D_B(fake_B.detach())
-            loss_D_fake = F.mse_loss(
-                pred_fake, torch.zeros(pred_fake.shape).type_as(pred_fake)
-            )
+            ## [todo] edge 16frame cut
+            pred_B_fake = self.D_B(self.fake_B.detach())
+            loss_D_B_fake = torch.mean(F.relu(m + pred_B_fake))
             ## D_B total loss
-            loss_D_B = (loss_D_real + loss_D_fake) * 0.5
+            loss_D_B = loss_D_B_real + loss_D_B_fake
 
             # Total
-            d_loss = loss_D_A + loss_D_B
-            output = {"loss": d_loss, "log": {"Loss/Discriminator": d_loss}}
+            loss_D = loss_D_A + loss_D_B
+            output = {"loss": loss_D, "log": {"Loss/Discriminator": loss_D}}
             return output
 
     def validation_step(self, batch, batch_idx):
@@ -180,7 +184,7 @@ class Scyclone(pl.LightningModule):
 
     def configure_optimizers(self):
         """
-        return torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate, betas=(0.5, 0.999))
+        return G/D optimizers
         """
 
         optim_G = torch.optim.Adam(
@@ -197,7 +201,6 @@ class Scyclone(pl.LightningModule):
 
 
 def cli_main():
-    from project.datasets.mnist import mnist
 
     pl.seed_everything(1234)
 
@@ -210,17 +213,16 @@ def cli_main():
     # parser = MNISTDataModule.add_argparse_args(parser)
     args = parser.parse_args()
 
-    # data
-    mnist_train, mnist_val, test_dataset = mnist()
-
-    # model
+    # setup
     model = Scyclone(**vars(args))
+    datamodule = NpVCC2016DataModule(64, download=True)
+    trainer = pl.Trainer(gpus=args.gpus, max_epochs=2, limit_train_batches=200)
 
     # training
-    trainer = pl.Trainer(gpus=args.gpus, max_epochs=2, limit_train_batches=200)
-    trainer.fit(model, mnist_train, mnist_val)
+    trainer.fit(model, datamodule=datamodule)
 
-    trainer.test(test_dataloaders=test_dataset)
+    # testing
+    trainer.test(datamodule=datamodule)
 
 
 if __name__ == "__main__":  # pragma: no cover

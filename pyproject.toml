@@ -6,6 +6,9 @@ authors = ["Tarepan"]
 
 [tool.poetry.dependencies]
 python = "^3.6.1"
+torch = "^1.6.0"
+pytorch-lightning = "^0.10.0"
+npvcc2016 = "^1.0.5"
 
 [tool.poetry.dev-dependencies]
 

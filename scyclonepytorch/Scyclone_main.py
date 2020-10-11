@@ -6,6 +6,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.metrics.functional import accuracy
 from torch.nn import functional as F
 from npvcc2016.PyTorch.Lightning.datamodule.waveform import NpVCC2016DataModule
+from torch.tensor import Tensor
 
 from .modules import Generator, Discriminator
 
@@ -46,7 +47,7 @@ class Scyclone(pl.LightningModule):
         # self.mnist_train = None
         # self.mnist_val = None
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         return self.G_A2B(x)
 
     def training_step(self, batch, batch_idx, optimizer_idx):

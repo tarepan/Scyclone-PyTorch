@@ -1,5 +1,6 @@
+from typing import List
+from torch import Tensor
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 class ResidualBlock_G(nn.Module):
@@ -11,16 +12,13 @@ class ResidualBlock_G(nn.Module):
         kernel = 5
 
         # blocks
-        conv_block = [
+        self.conv_block = nn.Sequential(
             nn.Conv1d(C, C, kernel),
             nn.LeakyReLU(lr),
             nn.Conv1d(C, C, kernel),
-        ]
+        )
 
-        # block registration (`*` is array unpack)
-        self.conv_block = nn.Sequential(*conv_block)
-
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         return x + self.conv_block(x)
 
 
@@ -41,7 +39,7 @@ class Generator(nn.Module):
 
         # channel adjustment with pointwiseConv
         ## "We used leaky rectified linear units" from Scyclone paper
-        blocks = [
+        blocks: List[nn.Module] = [
             nn.Conv1d(n_C_freq, n_C_trunk, 1),
             nn.LeakyReLU(lr),
         ]
@@ -56,7 +54,7 @@ class Generator(nn.Module):
         # block registration (`*` is array unpack)
         self.model = nn.Sequential(*blocks)
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         return self.model(x)
 
 
@@ -69,16 +67,13 @@ class ResidualSNBlock_D(nn.Module):
         kernel = 5
 
         # blocks
-        conv_blocks = [
+        self.conv_blocks = nn.Sequential(
             nn.utils.spectral_norm(nn.Conv1d(C, C, kernel)),
             nn.LeakyReLU(lr),
             nn.utils.spectral_norm(nn.Conv1d(C, C, kernel)),
-        ]
+        )
 
-        # block registration (`*` is array unpack)
-        self.conv_blocks = nn.Sequential(*conv_blocks)
-
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         return x + self.conv_blocks(x)
 
 
@@ -99,7 +94,7 @@ class Discriminator(nn.Module):
 
         # channel adjustment with pointwiseConv
         ## "We used leaky rectified linear units" from Scyclone paper
-        blocks = [
+        blocks: List[nn.Module] = [
             nn.utils.spectral_norm(nn.Conv1d(n_C_freq, n_C_trunk, 1)),
             nn.LeakyReLU(lr),
         ]
@@ -117,7 +112,7 @@ class Discriminator(nn.Module):
         # module registration (`*` is array unpack)
         self.model = nn.Sequential(*blocks)
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         # [todo]
         # "We add small Gaussian noise following N (0, 0.01) to the input of the discriminator" from Scyclone paper
         return self.model(x)

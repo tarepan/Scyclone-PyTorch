@@ -1,8 +1,10 @@
+from typing import Tuple
 import itertools
 from argparse import ArgumentParser
 
 import torch
 import pytorch_lightning as pl
+from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.metrics.functional import accuracy
 from torch.nn import functional as F
 from npvcc2016.PyTorch.Lightning.datamodule.waveform import NpVCC2016DataModule
@@ -50,21 +52,17 @@ class Scyclone(pl.LightningModule):
     def forward(self, x: Tensor) -> Tensor:
         return self.G_A2B(x)
 
-    def training_step(self, batch, batch_idx, optimizer_idx):
+    def training_step(
+        self, batch: Tuple[Tensor, Tensor], batch_idx: int, optimizer_idx: int
+    ):
         """
         Min-Max adversarial training (G:D = 1:1)
         """
-        # result = pl.TrainResult(minimize=loss)
-        # result.log("train_loss", loss)
         real_A, real_B = batch
 
         # Generator training
         if optimizer_idx == 0:
-            # Generator adversarial losses
-            ## hinge loss (from Scyclone paper eq.1)
-            """
-            change to hinge loss
-            """
+            # Generator adversarial losses: hinge loss (from Scyclone paper eq.1)
             fake_B = self.G_A2B(real_A)
             pred_fake_B = self.D_B(fake_B)
             loss_GAN_A2B = torch.mean(F.relu(-1.0 * pred_fake_B))
@@ -72,15 +70,13 @@ class Scyclone(pl.LightningModule):
             pred_fake_A = self.D_A(fake_A)
             loss_GAN_B2A = torch.mean(F.relu(-1.0 * pred_fake_A))
 
-            # cycle consistency losses
-            ## L1 loss (from Scyclone paper eq.1)
+            # cycle consistency losses: L1 loss (from Scyclone paper eq.1)
             cycled_A = self.G_B2A(fake_B)
             loss_cycle_ABA = F.l1_loss(cycled_A, real_A)
             cycled_B = self.G_A2B(fake_A)
             loss_cycle_BAB = F.l1_loss(cycled_B, real_B)
 
-            # identity mapping losses
-            ## L1 loss (from Scyclone paper eq.1)
+            # identity mapping losses: L1 loss (from Scyclone paper eq.1)
             same_B = self.G_A2B(real_B)
             loss_identity_B = F.l1_loss(same_B, real_B)
             same_A = self.G_B2A(real_A)
@@ -104,28 +100,6 @@ class Scyclone(pl.LightningModule):
             self.real_B = real_B
             self.real_A = real_A
 
-            # Log to tb
-            # if batch_idx % 500 == 0:
-            #     self.logger.experiment.add_image(
-            #         "Real/A",
-            #         make_grid(self.real_A, normalize=True, scale_each=True),
-            #         self.current_epoch,
-            #     )
-            #     self.logger.experiment.add_image(
-            #         "Real/B",
-            #         make_grid(self.real_B, normalize=True, scale_each=True),
-            #         self.current_epoch,
-            #     )
-            #     self.logger.experiment.add_image(
-            #         "Generated/A",
-            #         make_grid(self.generated_A, normalize=True, scale_each=True),
-            #         self.current_epoch,
-            #     )
-            #     self.logger.experiment.add_image(
-            #         "Generated/B",
-            #         make_grid(self.generated_B, normalize=True, scale_each=True),
-            #         self.current_epoch,
-            #     )
             return output
 
         # Discriminator training
@@ -165,16 +139,38 @@ class Scyclone(pl.LightningModule):
             output = {"loss": loss_D, "log": {"Loss/Discriminator": loss_D}}
             return output
 
-    def validation_step(self, batch, batch_idx):
+    def validation_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int):
         x, y = batch
         y_hat = self(x)
         loss = F.cross_entropy(y_hat, y)
-        result = pl.EvalResult(checkpoint_on=loss)
-        result.log("val_loss", loss)
-        result.log("val_acc", accuracy(y_hat, y))
+        self.log("val_loss", loss)
+        self.log("val_acc", accuracy(y_hat, y))
+        # Log to tb
+        # if batch_idx % 500 == 0:
+        #     self.logger.experiment.add_image(
+        #         "Real/A",
+        #         make_grid(self.real_A, normalize=True, scale_each=True),
+        #         self.current_epoch,
+        #     )
+        #     self.logger.experiment.add_image(
+        #         "Real/B",
+        #         make_grid(self.real_B, normalize=True, scale_each=True),
+        #         self.current_epoch,
+        #     )
+        #     self.logger.experiment.add_image(
+        #         "Generated/A",
+        #         make_grid(self.generated_A, normalize=True, scale_each=True),
+        #         self.current_epoch,
+        #     )
+        #     self.logger.experiment.add_image(
+        #         "Generated/B",
+        #         make_grid(self.generated_B, normalize=True, scale_each=True),
+        #         self.current_epoch,
+        #     )
+
         return result
 
-    def test_step(self, batch, batch_idx):
+    def test_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int):
         x, y = batch
         y_hat = self(x)
         loss = F.cross_entropy(y_hat, y)
@@ -213,11 +209,17 @@ def cli_main():
     # parser = pl.Trainer.add_argparse_args(parser)
     # parser = MNISTDataModule.add_argparse_args(parser)
     args = parser.parse_args()
-
     # setup
     model = Scyclone(**vars(args))
     datamodule = NpVCC2016DataModule(64, download=True)
-    trainer = pl.Trainer(gpus=args.gpus, max_epochs=2, limit_train_batches=200)
+    logger = pl_loggers.TensorBoardLogger("logs/")
+    trainer = pl.Trainer(
+        gpus=args.gpus,
+        max_epochs=400000,
+        limit_train_batches=200,
+        check_val_every_n_epoch=10,
+        logger=logger,
+    )
 
     # training
     trainer.fit(model, datamodule=datamodule)

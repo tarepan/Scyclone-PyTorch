@@ -139,45 +139,21 @@ class Scyclone(pl.LightningModule):
             output = {"loss": loss_D, "log": {"Loss/Discriminator": loss_D}}
             return output
 
+    def training_step_end(self, out):
+        self.log_dict(out.log, on_step=False, on_epoch=True)
+
     def validation_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int):
-        x, y = batch
-        y_hat = self(x)
-        loss = F.cross_entropy(y_hat, y)
-        self.log("val_loss", loss)
-        self.log("val_acc", accuracy(y_hat, y))
-        # Log to tb
-        # if batch_idx % 500 == 0:
-        #     self.logger.experiment.add_image(
-        #         "Real/A",
-        #         make_grid(self.real_A, normalize=True, scale_each=True),
-        #         self.current_epoch,
-        #     )
-        #     self.logger.experiment.add_image(
-        #         "Real/B",
-        #         make_grid(self.real_B, normalize=True, scale_each=True),
-        #         self.current_epoch,
-        #     )
-        #     self.logger.experiment.add_image(
-        #         "Generated/A",
-        #         make_grid(self.generated_A, normalize=True, scale_each=True),
-        #         self.current_epoch,
-        #     )
-        #     self.logger.experiment.add_image(
-        #         "Generated/B",
-        #         make_grid(self.generated_B, normalize=True, scale_each=True),
-        #         self.current_epoch,
-        #     )
-
+        real_A, real_B = batch
+        fake_B = self.G_A2B(real_A)
+        fake_A = self.G_B2A(real_B)
+        # [todo]: spec2wave
+        ## spec2wave
+        ## self.logger.experiment.xxx (add wave的な)
+        ### self.current_epoch
         return result
 
-    def test_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int):
-        x, y = batch
-        y_hat = self(x)
-        loss = F.cross_entropy(y_hat, y)
-        result = pl.EvalResult(checkpoint_on=loss)
-        result.log("test_loss", loss)
-        result.log("test_acc", accuracy(y_hat, y))
-        return result
+    # def test_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int):
+    #     return result
 
     def configure_optimizers(self):
         """

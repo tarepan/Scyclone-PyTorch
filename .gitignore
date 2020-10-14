@@ -1,5 +1,8 @@
 # Machine Learning
 logs/
+## Dataset
+npVCC2016-1.0.0/
+npVCC2016-1.0.0.zip
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

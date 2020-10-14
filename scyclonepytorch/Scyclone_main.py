@@ -5,11 +5,10 @@ from argparse import ArgumentParser
 import torch
 import pytorch_lightning as pl
 from pytorch_lightning import loggers as pl_loggers
-from pytorch_lightning.metrics.functional import accuracy
 from torch.nn import functional as F
-from npvcc2016.PyTorch.Lightning.datamodule.waveform import NpVCC2016DataModule
 from torch.tensor import Tensor
 
+from .datamodule import NonParallelSpecDataModule
 from .modules import Generator, Discriminator
 
 # codes are inspired by CycleGAN family with PyTorch Lightning https://github.com/HasnainRaz/Fast-AgingGAN/blob/master/gan_module.py
@@ -27,10 +26,17 @@ class Scyclone(pl.LightningModule):
     Origin: Masaya Tanaka, et al.. (2020). Scyclone: High-Quality and Parallel-Data-Free Voice Conversion Using Spectrogram and Cycle-Consistent Adversarial Networks. Arxiv 2005.03334.
     """
 
-    def __init__(self):
+    def __init__(self, _=True):
         super().__init__()
 
         # params
+        self.hparams = {
+            "weight_cycle": 10,
+            "weight_cycle": 10,
+            "hinge_offset_D": 0.5,
+            "learning_rate": 2.0 * 1e-4,
+            "batch_size": 32,
+        }
         ## "λcy and λid were set to 10 and 1 in Eq. 1" in Scyclone paper
         ## self.weight_adv = 1 // standard
         self.weight_cycle = 10
@@ -112,24 +118,21 @@ class Scyclone(pl.LightningModule):
             # Adversarial loss: hinge loss (from Scyclone paper eq.1)
             # D_A
             ## Real loss
-            ## [todo] edge 16frame cut
-            pred_A_real = self.D_A(real_A)
+            ### edge cut: [B, C, L] => [B, C, L_cut]
+            pred_A_real = self.D_A(torch.narrow(real_A, 2, 16, 128))
             loss_D_A_real = torch.mean(F.relu(m - pred_A_real))
             ## Fake loss
-            ## [todo] edge 16frame cut
-            pred_A_fake = self.D_A(self.fake_A.detach())
+            pred_A_fake = self.D_A(torch.narrow(self.fake_A.detach(), 2, 16, 128))
             loss_D_A_fake = torch.mean(F.relu(m + pred_A_fake))
             ## D_A total loss
             loss_D_A = loss_D_A_real + loss_D_A_fake
 
             # D_B
             ## Real loss
-            ## [todo] edge 16frame cut
-            pred_B_real = self.D_B(real_B)
+            pred_B_real = self.D_B(torch.narrow(real_B, 2, 16, 128))
             loss_D_B_real = torch.mean(F.relu(m - pred_B_real))
             ## Fake loss
-            ## [todo] edge 16frame cut
-            pred_B_fake = self.D_B(self.fake_B.detach())
+            pred_B_fake = self.D_B(torch.narrow(self.fake_B.detach(), 2, 16, 128))
             loss_D_B_fake = torch.mean(F.relu(m + pred_B_fake))
             ## D_B total loss
             loss_D_B = loss_D_B_real + loss_D_B_fake
@@ -150,10 +153,9 @@ class Scyclone(pl.LightningModule):
         ## spec2wave
         ## self.logger.experiment.xxx (add wave的な)
         ### self.current_epoch
-        return result
 
-    # def test_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int):
-    #     return result
+    def test_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int):
+        pass
 
     def configure_optimizers(self):
         """
@@ -186,14 +188,14 @@ def cli_main():
     # parser = MNISTDataModule.add_argparse_args(parser)
     args = parser.parse_args()
     # setup
-    model = Scyclone(**vars(args))
-    datamodule = NpVCC2016DataModule(64, download=True)
+    model = Scyclone()
+    datamodule = NonParallelSpecDataModule(64)
     logger = pl_loggers.TensorBoardLogger("logs/")
     trainer = pl.Trainer(
         gpus=args.gpus,
         max_epochs=400000,
         limit_train_batches=200,
-        check_val_every_n_epoch=10,
+        check_val_every_n_epoch=100,
         logger=logger,
     )
 
@@ -201,7 +203,7 @@ def cli_main():
     trainer.fit(model, datamodule=datamodule)
 
     # testing
-    trainer.test(datamodule=datamodule)
+    # trainer.test(datamodule=datamodule)
 
 
 if __name__ == "__main__":  # pragma: no cover

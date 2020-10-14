@@ -150,7 +150,7 @@ testing = ["coverage", "pyyaml"]
 
 [[package]]
 name = "npvcc2016"
-version = "1.0.5"
+version = "1.0.6"
 description = "npvcc2016: Python loader of npVCC2016 speech corpus"
 category = "main"
 optional = false
@@ -488,8 +488,8 @@ markdown = [
     {file = "Markdown-3.3.tar.gz", hash = "sha256:4f4172a4e989b97f96860fa434b89895069c576e2b537c4b4eed265266a7affc"},
 ]
 npvcc2016 = [
-    {file = "npvcc2016-1.0.5-py3-none-any.whl", hash = "sha256:245ab6e0c7aaadcdaf6d56cd72cbfd5018947cf4c4fb95b05fcb69dae9a11090"},
-    {file = "npvcc2016-1.0.5.tar.gz", hash = "sha256:3d0315f2b4e502ef4e2dc5907ac31525d7b4ebc4e0adbc050e47cf99a5b75797"},
+    {file = "npvcc2016-1.0.6-py3-none-any.whl", hash = "sha256:e2c56cab87b83b7ea5e1faaf80cd022abe103346f5fe7075393b871066ef73f8"},
+    {file = "npvcc2016-1.0.6.tar.gz", hash = "sha256:35e40ed504bbf03481269eb483d57b8ba6540ef6aba710ff422f66c5b2f53f20"},
 ]
 numpy = [
     {file = "numpy-1.19.2-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:b594f76771bc7fc8a044c5ba303427ee67c17a09b36e1fa32bde82f5c419d17a"},

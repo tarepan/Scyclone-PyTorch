@@ -9,13 +9,13 @@ class ResidualBlock_G(nn.Module):
 
         # params
         ## "residual blocks consisting of two convolutional layers with a kernel size five" from Scyclone paper
-        kernel = 5
+        kernel: int = 5
 
         # blocks
         self.conv_block = nn.Sequential(
-            nn.Conv1d(C, C, kernel),
+            nn.Conv1d(C, C, kernel, padding=kernel // 2),
             nn.LeakyReLU(lr),
-            nn.Conv1d(C, C, kernel),
+            nn.Conv1d(C, C, kernel, padding=kernel // 2),
         )
 
     def forward(self, x: Tensor) -> Tensor:
@@ -68,12 +68,15 @@ class ResidualSNBlock_D(nn.Module):
 
         # blocks
         self.conv_blocks = nn.Sequential(
-            nn.utils.spectral_norm(nn.Conv1d(C, C, kernel)),
+            nn.utils.spectral_norm(nn.Conv1d(C, C, kernel, padding=kernel // 2)),
             nn.LeakyReLU(lr),
-            nn.utils.spectral_norm(nn.Conv1d(C, C, kernel)),
+            nn.utils.spectral_norm(nn.Conv1d(C, C, kernel, padding=kernel // 2)),
         )
 
     def forward(self, x: Tensor) -> Tensor:
+        """
+        Tensor[N, C, L] -> Tensor[N, C, L]
+        """
         return x + self.conv_blocks(x)
 
 

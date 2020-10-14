@@ -1,8 +1,10 @@
 [tool.poetry]
 name = "scyclonepytorch"
 version = "0.1.0"
-description = "Reproduction of \"Scyclone\" with PyTorch"
+description = "Reimplementation of Scyclone with PyTorch"
 authors = ["Tarepan"]
+readme = "README.md"
+repository = "https://github.com/tarepan/Scyclone-PyTorch"
 
 [tool.poetry.dependencies]
 python = "^3.6.1"

@@ -1,8 +1,8 @@
 # from https://github.com/microsoft/vscode-remote-try-python 2020-10-01
 
 # See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.134.0/containers/python-3/.devcontainer/base.Dockerfile
-ARG VARIANT="3"
-FROM mcr.microsoft.com/vscode/devcontainers/python:0-${VARIANT}
+ARG VARIANT="3.6"
+FROM mcr.microsoft.com/vscode/devcontainers/python:3.6
 
 # [Optional] Allow the vscode user to pip install globally w/o sudo
 # ENV PIP_TARGET=/usr/local/pip-global

@@ -8,6 +8,9 @@ from pytorch_lightning import loggers as pl_loggers
 from torch.nn import functional as F
 from torch.tensor import Tensor
 
+# currently there is no stub in npvcc2016
+from torchaudio.transforms import GriffinLim  # type: ignore
+
 from .datamodule import NonParallelSpecDataModule
 from .modules import Generator, Discriminator
 
@@ -155,10 +158,14 @@ class Scyclone(pl.LightningModule):
         real_A, real_B = batch
         fake_B = self.G_A2B(real_A)
         fake_A = self.G_B2A(real_B)
-        # [todo]: spec2wave
-        ## spec2wave
+        gl = GriffinLim(n_fft=254, n_iter=128)
+        fake_B_wave = gl(fake_B)
+        fake_A_wave = gl(fake_A)
+        return {"log": {"Validation/A2B": fake_B_wave, "Validation/B2A": fake_A_wave}}
+
+    def validation_step_end(self, out) -> None:
         ## self.logger.experiment.xxx (add wave的な)
-        ### self.current_epoch
+        pass
 
     def test_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int):
         pass

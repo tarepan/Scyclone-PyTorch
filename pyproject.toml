@@ -11,6 +11,7 @@ python = "^3.6.1"
 torch = "^1.6.0"
 pytorch-lightning = "^0.10.0"
 npvcc2016 = "^1.0.8"
+torchaudio = "^0.6.0"
 
 [tool.poetry.dev-dependencies]
 

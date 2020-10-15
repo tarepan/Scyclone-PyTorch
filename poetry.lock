@@ -150,7 +150,7 @@ testing = ["coverage", "pyyaml"]
 
 [[package]]
 name = "npvcc2016"
-version = "1.0.8"
+version = "1.0.9"
 description = "npvcc2016: Python loader of npVCC2016 speech corpus"
 category = "main"
 optional = false
@@ -158,7 +158,7 @@ python-versions = ">=3.6.1,<4.0.0"
 
 [package.dependencies]
 pytorch-lightning = ">=0.10.0,<0.11.0"
-torch = ">=1.6.0,<2.0.0"
+torch = "*"
 torchaudio = ">=0.6.0,<0.7.0"
 
 [[package]]
@@ -400,7 +400,7 @@ testing = ["pytest (>=3.5,<3.7.3 || >3.7.3)", "pytest-checkdocs (>=1.2.3)", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.1"
-content-hash = "89d7e7561aca6541b123586cc4eaa93f256c12254a3433709599ba8522fe144c"
+content-hash = "a638215c76c6a769b1218b3df9f9e65f03c4c81f372470d37d388ad00a642d56"
 
 [metadata.files]
 absl-py = [
@@ -488,8 +488,8 @@ markdown = [
     {file = "Markdown-3.3.tar.gz", hash = "sha256:4f4172a4e989b97f96860fa434b89895069c576e2b537c4b4eed265266a7affc"},
 ]
 npvcc2016 = [
-    {file = "npvcc2016-1.0.8-py3-none-any.whl", hash = "sha256:229b3d5d049df70d8c5765ebe0f4da490bfa4419604e850389732450f8eab5b3"},
-    {file = "npvcc2016-1.0.8.tar.gz", hash = "sha256:7a0c1c2f22215158947ea89115b981c691efa7f710c64d87daa44ce4860c79b8"},
+    {file = "npvcc2016-1.0.9-py3-none-any.whl", hash = "sha256:feb52767cd5d1feffbbb2e92968b3019d5893f2a018ff5a5b79a0f568002071e"},
+    {file = "npvcc2016-1.0.9.tar.gz", hash = "sha256:ae081332e6357aae8e81aa4de87931b52c4c4a9a5dc8de7dfa3676190dabea8b"},
 ]
 numpy = [
     {file = "numpy-1.19.2-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:b594f76771bc7fc8a044c5ba303427ee67c17a09b36e1fa32bde82f5c419d17a"},

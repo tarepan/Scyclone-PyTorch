@@ -165,7 +165,17 @@ class Scyclone(pl.LightningModule):
 
     def validation_step_end(self, out) -> None:
         ## self.logger.experiment.xxx (add wave的な)
-        pass
+        for i in range(0, 2):
+            self.logger.experiment.add_audio(
+                "Validation/A2B",
+                torch.reshape(out["log"]["Validation/A2B"][i], (1, -1)),
+                sample_rate=16000,
+            )
+            self.logger.experiment.add_audio(
+                "Validation/B2A",
+                torch.reshape(out["log"]["Validation/B2A"][i], (1, -1)),
+                sample_rate=16000,
+            )
 
     def test_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int):
         pass

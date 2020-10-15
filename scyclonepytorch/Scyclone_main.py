@@ -32,7 +32,7 @@ class Scyclone(pl.LightningModule):
         # params
         self.hparams = {
             "weight_cycle": 10,
-            "weight_cycle": 10,
+            "weight_identity": 1,
             "hinge_offset_D": 0.5,
             "learning_rate": 2.0 * 1e-4,
             "batch_size": 32,

@@ -143,7 +143,7 @@ class Scyclone(pl.LightningModule):
             return output
 
     def training_step_end(self, out):
-        self.log_dict(out.log, on_step=False, on_epoch=True)
+        self.log_dict(out["log"], on_step=False, on_epoch=True)
 
     def validation_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int):
         real_A, real_B = batch

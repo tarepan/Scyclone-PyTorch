@@ -31,29 +31,20 @@ class Scyclone(pl.LightningModule):
 
         # params
         self.hparams = {
+            ## "λcy and λid were set to 10 and 1 in Eq. 1" in Scyclone paper
+            ## self.weight_adv = 1 ## standard
             "weight_cycle": 10,
             "weight_identity": 1,
+            ## "m is a parameter of the hinge loss and is set to (...) 0.5 in our experiments" in Scyclone paper
             "hinge_offset_D": 0.5,
             "learning_rate": 2.0 * 1e-4,
-            "batch_size": 32,
         }
-        ## "λcy and λid were set to 10 and 1 in Eq. 1" in Scyclone paper
-        ## self.weight_adv = 1 // standard
-        self.weight_cycle = 10
-        self.weight_identity = 1
-        ## "m is a parameter of the hinge loss and is set to (...) 0.5 in our experiments" in Scyclone paper
-        self.hinge_offset_D = 0.5
-        self.learning_rate = 2.0 * 1e-4
-        self.batch_size = 32
         self.save_hyperparameters()
 
         self.G_A2B = Generator()
         self.G_B2A = Generator()
         self.D_A = Discriminator()
         self.D_B = Discriminator()
-
-        # self.mnist_train = None
-        # self.mnist_val = None
 
     def forward(self, x: Tensor) -> Tensor:
         return self.G_A2B(x)
@@ -98,7 +89,18 @@ class Scyclone(pl.LightningModule):
                 + loss_identity_B * self.hparams["weight_identity"]
             )
 
-            output = {"loss": loss_G, "log": {"Loss/Generator": loss_G}}
+            output = {
+                "loss": loss_G,
+                "log": {
+                    "Loss/G_total": loss_G,
+                    "Loss/Adv/G_A2B": loss_GAN_A2B,
+                    "Loss/Adv/G_B2A": loss_GAN_B2A,
+                    "Loss/Cyc/A2B2A": loss_cycle_ABA * self.hparams["weight_cycle"],
+                    "Loss/Cyc/B2A2B": loss_cycle_BAB * self.hparams["weight_cycle"],
+                    "Loss/Id/A2A": loss_identity_A * self.hparams["weight_identity"],
+                    "Loss/Id/B2B": loss_identity_B * self.hparams["weight_identity"],
+                },
+            }
             ## registration for Discriminator loop
             self.fake_B = fake_B
             self.fake_A = fake_A
@@ -110,10 +112,7 @@ class Scyclone(pl.LightningModule):
 
         # Discriminator training
         if optimizer_idx == 1:
-            m = self.hinge_offset_D
-
-            ## ones:  torch.ones( pred_real.shape).type_as(pred_real)
-            ## zeros: torch.zeros(pred_fake.shape).type_as(pred_fake)
+            m = self.hparams["hinge_offset_D"]
 
             # Adversarial loss: hinge loss (from Scyclone paper eq.1)
             # D_A
@@ -139,7 +138,14 @@ class Scyclone(pl.LightningModule):
 
             # Total
             loss_D = loss_D_A + loss_D_B
-            output = {"loss": loss_D, "log": {"Loss/Discriminator": loss_D}}
+            output = {
+                "loss": loss_D,
+                "log": {
+                    "Loss/D_total": loss_D,
+                    "Loss/D_A": loss_D_A,
+                    "Loss/D_B": loss_D_B,
+                },
+            }
             return output
 
     def training_step_end(self, out):
@@ -164,12 +170,12 @@ class Scyclone(pl.LightningModule):
 
         optim_G = torch.optim.Adam(
             itertools.chain(self.G_A2B.parameters(), self.G_B2A.parameters()),
-            lr=self.hparams.learning_rate,
+            lr=self.hparams["learning_rate"],
             betas=(0.5, 0.999),
         )
         optim_D = torch.optim.Adam(
             itertools.chain(self.D_A.parameters(), self.D_B.parameters()),
-            lr=self.hparams.learning_rate,
+            lr=self.hparams["learning_rate"],
             betas=(0.5, 0.999),
         )
         return [optim_G, optim_D], []

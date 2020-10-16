@@ -95,39 +95,22 @@ class Scyclone(pl.LightningModule):
                 + loss_identity_B * self.hparams["weight_identity"]
             )
 
-            # Logging
-            self.log("Loss/G_total", loss_G, on_step=False, on_epoch=True)
-            self.log("Loss/Adv/G_A2B", loss_GAN_A2B, on_step=False, on_epoch=True)
-            self.log("Loss/Adv/G_B2A", loss_GAN_B2A, on_step=False, on_epoch=True)
-            self.log(
-                "Loss/Cyc/A2B2A",
-                loss_cycle_ABA * self.hparams["weight_cycle"],
-                on_step=False,
-                on_epoch=True,
-            )
-            self.log(
-                "Loss/Cyc/B2A2B",
-                loss_cycle_BAB * self.hparams["weight_cycle"],
-                on_step=False,
-                on_epoch=True,
-            )
-            self.log(
-                "Loss/Id/A2A",
-                loss_identity_A * self.hparams["weight_identity"],
-                on_step=False,
-                on_epoch=True,
-            )
-            self.log(
-                "Loss/Id/B2B",
-                loss_identity_B * self.hparams["weight_identity"],
-                on_step=False,
-                on_epoch=True,
-            )
             ## registration for Discriminator loop
             self.fake_B = fake_B
             self.fake_A = fake_A
 
-            return {"loss": loss_G}
+            return {
+                "loss": loss_G,
+                "log": {
+                    "Loss/G_total": loss_G,
+                    "Loss/Adv/G_B2A": loss_GAN_B2A,
+                    "Loss/Adv/G_A2B": loss_GAN_A2B,
+                    "Loss/Cyc/A2B2A": loss_cycle_ABA * self.hparams["weight_cycle"],
+                    "Loss/Cyc/B2A2B": loss_cycle_BAB * self.hparams["weight_cycle"],
+                    "Loss/Id/A2A": loss_identity_A * self.hparams["weight_identity"],
+                    "Loss/Id/B2B": loss_identity_B * self.hparams["weight_identity"],
+                },
+            }
 
         # Discriminator training
         if optimizer_idx == 1:
@@ -158,11 +141,19 @@ class Scyclone(pl.LightningModule):
             # Total
             loss_D = loss_D_A + loss_D_B
 
-            # Logging
-            self.log("Loss/D_total", loss_D, on_step=False, on_epoch=True)
-            self.log("Loss/D_A", loss_D_A, on_step=False, on_epoch=True)
-            self.log("Loss/D_B", loss_D_B, on_step=False, on_epoch=True)
-            return {"loss": loss_D}
+            return {
+                "loss": loss_D,
+                "log": {
+                    "Loss/D_total": loss_D,
+                    "Loss/D_A": loss_D_A,
+                    "Loss/D_B": loss_D_B,
+                },
+            }
+
+    def training_step_end(self, out):
+        for name, value in out["log"].items():
+            self.log(name, value, on_step=False, on_epoch=True)
+        return out
 
     def validation_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int):
         real_A, real_B = batch

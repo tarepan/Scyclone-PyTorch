@@ -231,7 +231,8 @@ def cli_main():
         auto_select_gpus=True,
         amp_backend="native",
         amp_level="O1",  # It could be eliminated because PyTorch native amp use only O1 equivalent [forum](https://discuss.pytorch.org/t/torch-cuda-amp-how-to-set-optimization-level/92744)
-        max_epochs=400000,  # from Scyclone poster (check my Scyclone summary blog post)
+        # from Scyclone poster (check my Scyclone summary blog post)
+        max_epochs=400000 if not args.profiler else 100,
         check_val_every_n_epoch=1500,  # about 1 validation per 10 min
         checkpoint_callback=ckpt_cb,
         # reload_dataloaders_every_epoch=True,

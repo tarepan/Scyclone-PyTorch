@@ -49,6 +49,8 @@ class Scyclone(pl.LightningModule):
         self.D_A = Discriminator()
         self.D_B = Discriminator()
 
+        self.griffinLim = GriffinLim(n_fft=254, n_iter=128)
+
     def forward(self, x: Tensor) -> Tensor:
         return self.G_A2B(x)
 
@@ -158,9 +160,8 @@ class Scyclone(pl.LightningModule):
         real_A, real_B = batch
         fake_B = self.G_A2B(real_A)
         fake_A = self.G_B2A(real_B)
-        gl = GriffinLim(n_fft=254, n_iter=128)
-        fake_B_wave = gl(fake_B)
-        fake_A_wave = gl(fake_A)
+        fake_B_wave = self.griffinLim(fake_B)
+        fake_A_wave = self.griffinLim(fake_A)
         return {"log": {"Validation/A2B": fake_B_wave, "Validation/B2A": fake_A_wave}}
 
     def validation_step_end(self, out) -> None:

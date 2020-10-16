@@ -217,6 +217,7 @@ def cli_main():
     # args
     parser = ArgumentParser()
     parser.add_argument("--gpus", default=0, type=int)
+    parser.add_argument("--checkpoint", default=None, type=str)
 
     # optional... automatically add all the params
     # parser = pl.Trainer.add_argparse_args(parser)
@@ -232,8 +233,8 @@ def cli_main():
         max_epochs=400000,  # from Scyclone poster (check my Scyclone summary blog post)
         check_val_every_n_epoch=1500,  # about 1 validation per 10 min
         # reload_dataloaders_every_epoch=True,
-        # resume_from_checkpoint="url",
         logger=logger,
+        resume_from_checkpoint=args.checkpoint,
     )
 
     # training

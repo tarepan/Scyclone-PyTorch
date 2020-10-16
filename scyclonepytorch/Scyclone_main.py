@@ -178,15 +178,23 @@ class Scyclone(pl.LightningModule):
 
     def validation_step_end(self, out) -> None:
         for i in range(0, 2):
+            a2b = out["log"]["Validation/A2B"][i]
+            max_a2b = torch.max(a2b, 0, keepdim=True).values
+            min_a2b = torch.min(a2b, 0, keepdim=True).values
+            scaler_a2b = torch.max(torch.cat((torch.abs(max_a2b), torch.abs(min_a2b))))
             self.logger.experiment.add_audio(
                 "Validation/A2B",
-                torch.reshape(out["log"]["Validation/A2B"][i], (1, -1)),
+                torch.reshape(a2b / scaler_a2b, (1, -1)),
                 global_step=self.current_epoch,
                 sample_rate=16000,
             )
+            b2a = out["log"]["Validation/B2A"][i]
+            max_b2a = torch.max(b2a, 0, keepdim=True).values
+            min_b2a = torch.min(b2a, 0, keepdim=True).values
+            scaler_b2a = torch.max(torch.cat((torch.abs(max_b2a), torch.abs(min_b2a))))
             self.logger.experiment.add_audio(
                 "Validation/B2A",
-                torch.reshape(out["log"]["Validation/B2A"][i], (1, -1)),
+                torch.reshape(b2a / scaler_b2a, (1, -1)),
                 global_step=self.current_epoch,
                 sample_rate=16000,
             )

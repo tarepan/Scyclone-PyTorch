@@ -213,7 +213,6 @@ def cli_main():
 
     # args
     parser = ArgumentParser()
-    parser.add_argument("--gpus", default=0, type=int)
     parser.add_argument("--checkpoint", default=None, type=str)
 
     # optional... automatically add all the params
@@ -221,14 +220,15 @@ def cli_main():
     # parser = MNISTDataModule.add_argparse_args(parser)
     args = parser.parse_args()
     # setup
+    gpus: int = 1 if torch.cuda.is_available() else 0  # single GPU or CPU
     model = Scyclone()
     datamodule = NonParallelSpecDataModule(64)
     logger = pl_loggers.TensorBoardLogger("logs/")
     ckpt_cb = ModelCheckpoint(period=60)
 
     trainer = pl.Trainer(
-        gpus=args.gpus,
-        # auto_select_gpus=True,
+        gpus=gpus,
+        auto_select_gpus=True,
         max_epochs=400000,  # from Scyclone poster (check my Scyclone summary blog post)
         check_val_every_n_epoch=1500,  # about 1 validation per 10 min
         checkpoint_callback=ckpt_cb,

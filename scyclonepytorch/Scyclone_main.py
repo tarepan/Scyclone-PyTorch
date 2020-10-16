@@ -3,11 +3,12 @@ import itertools
 from argparse import ArgumentParser
 
 import torch
+from torch.nn import functional as F
+from torch.tensor import Tensor
 import pytorch_lightning as pl
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks import ModelCheckpoint
-from torch.nn import functional as F
-from torch.tensor import Tensor
+from pytorch_lightning.profiler import AdvancedProfiler
 
 # currently there is no stub in npvcc2016
 from torchaudio.transforms import GriffinLim  # type: ignore
@@ -213,7 +214,7 @@ def cli_main():
     # args
     parser = ArgumentParser()
     parser.add_argument("--checkpoint", default=None, type=str)
-
+    parser.add_argument("--profiler", default=None, type=bool)
     # optional... automatically add all the params
     # parser = pl.Trainer.add_argparse_args(parser)
     # parser = MNISTDataModule.add_argparse_args(parser)
@@ -236,6 +237,7 @@ def cli_main():
         # reload_dataloaders_every_epoch=True,
         logger=logger,
         resume_from_checkpoint=args.checkpoint,
+        profiler=AdvancedProfiler() if args.profiler else None,
     )
 
     # training

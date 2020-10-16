@@ -49,7 +49,7 @@ class Scyclone(pl.LightningModule):
         self.D_A = Discriminator()
         self.D_B = Discriminator()
 
-        self.griffinLim = GriffinLim(n_fft=254)
+        self.griffinLim = GriffinLim(n_fft=254, n_iter=256)
 
     def forward(self, x: Tensor) -> Tensor:
         return self.G_A2B(x)

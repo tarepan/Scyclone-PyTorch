@@ -5,6 +5,7 @@ from argparse import ArgumentParser
 import torch
 import pytorch_lightning as pl
 from pytorch_lightning import loggers as pl_loggers
+from pytorch_lightning.callbacks import ModelCheckpoint
 from torch.nn import functional as F
 from torch.tensor import Tensor
 
@@ -227,11 +228,14 @@ def cli_main():
     model = Scyclone()
     datamodule = NonParallelSpecDataModule(64)
     logger = pl_loggers.TensorBoardLogger("logs/")
+    ckpt_cb = ModelCheckpoint(period=60)
+
     trainer = pl.Trainer(
         gpus=args.gpus,
         # auto_select_gpus=True,
         max_epochs=400000,  # from Scyclone poster (check my Scyclone summary blog post)
         check_val_every_n_epoch=1500,  # about 1 validation per 10 min
+        checkpoint_callback=ckpt_cb,
         # reload_dataloaders_every_epoch=True,
         logger=logger,
         resume_from_checkpoint=args.checkpoint,

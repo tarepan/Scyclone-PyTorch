@@ -126,9 +126,6 @@ class Scyclone(pl.LightningModule):
             ## registration for Discriminator loop
             self.fake_B = fake_B
             self.fake_A = fake_A
-            ## Is this needed...?
-            self.real_B = real_B
-            self.real_A = real_A
 
             return {"loss": loss_G}
 

@@ -214,6 +214,7 @@ def cli_main():
     # args
     parser = ArgumentParser()
     parser.add_argument("--checkpoint", default=None, type=str)
+    parser.add_argument("--numworker", default=4, type=int)
     parser.add_argument("--profiler", default=None, type=bool)
     # optional... automatically add all the params
     # parser = pl.Trainer.add_argparse_args(parser)
@@ -222,7 +223,7 @@ def cli_main():
     # setup
     gpus: int = 1 if torch.cuda.is_available() else 0  # single GPU or CPU
     model = Scyclone()
-    datamodule = NonParallelSpecDataModule(64)
+    datamodule = NonParallelSpecDataModule(64, args.numworker)
     logger = pl_loggers.TensorBoardLogger("logs/")
     ckpt_cb = ModelCheckpoint(period=60)
 

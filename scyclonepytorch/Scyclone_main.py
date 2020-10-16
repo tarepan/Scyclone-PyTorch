@@ -216,7 +216,7 @@ def cli_main():
     parser.add_argument("--checkpoint", default=None, type=str)
     parser.add_argument("--numworker", default=4, type=int)
     parser.add_argument("--profiler", default=None, type=bool)
-    parser.add_argument("--profilerEpoch", default=100, type=int)
+    parser.add_argument("--max_epochs", default=400000, type=int)
     # optional... automatically add all the params
     # parser = pl.Trainer.add_argparse_args(parser)
     # parser = MNISTDataModule.add_argparse_args(parser)
@@ -234,7 +234,7 @@ def cli_main():
         amp_backend="native",
         amp_level="O1",  # It could be eliminated because PyTorch native amp use only O1 equivalent [forum](https://discuss.pytorch.org/t/torch-cuda-amp-how-to-set-optimization-level/92744)
         # from Scyclone poster (check my Scyclone summary blog post)
-        max_epochs=400000 if not args.profiler else args.profilerEpoch,
+        max_epochs=args.max_epochs,
         check_val_every_n_epoch=1500,  # about 1 validation per 10 min
         checkpoint_callback=ckpt_cb,
         # reload_dataloaders_every_epoch=True,

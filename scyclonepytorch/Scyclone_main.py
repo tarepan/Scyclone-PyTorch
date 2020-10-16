@@ -99,21 +99,19 @@ class Scyclone(pl.LightningModule):
             self.fake_B = fake_B
             self.fake_A = fake_A
 
-            return {
-                "loss": loss_G,
-                "log": {
-                    "Loss/G_total": loss_G,
-                    "Loss/Adv/G_B2A": loss_GAN_B2A,
-                    "Loss/Adv/G_A2B": loss_GAN_A2B,
-                    "Loss/Cyc/A2B2A": loss_cycle_ABA * self.hparams["weight_cycle"],
-                    "Loss/Cyc/B2A2B": loss_cycle_BAB * self.hparams["weight_cycle"],
-                    "Loss/Id/A2A": loss_identity_A * self.hparams["weight_identity"],
-                    "Loss/Id/B2B": loss_identity_B * self.hparams["weight_identity"],
-                },
+            out = {"loss": loss_G}
+            log = {
+                "Loss/G_total": loss_G,
+                "Loss/Adv/G_B2A": loss_GAN_B2A,
+                "Loss/Adv/G_A2B": loss_GAN_A2B,
+                "Loss/Cyc/A2B2A": loss_cycle_ABA * self.hparams["weight_cycle"],
+                "Loss/Cyc/B2A2B": loss_cycle_BAB * self.hparams["weight_cycle"],
+                "Loss/Id/A2A": loss_identity_A * self.hparams["weight_identity"],
+                "Loss/Id/B2B": loss_identity_B * self.hparams["weight_identity"],
             }
 
         # Discriminator training
-        if optimizer_idx == 1:
+        elif optimizer_idx == 1:
             m = self.hparams["hinge_offset_D"]
 
             # Adversarial loss: hinge loss (from Scyclone paper eq.1)
@@ -141,18 +139,19 @@ class Scyclone(pl.LightningModule):
             # Total
             loss_D = loss_D_A + loss_D_B
 
-            return {
-                "loss": loss_D,
-                "log": {
-                    "Loss/D_total": loss_D,
-                    "Loss/D_A": loss_D_A,
-                    "Loss/D_B": loss_D_B,
-                },
+            out = {"loss": loss_D}
+            log = {
+                "Loss/D_total": loss_D,
+                "Loss/D_A": loss_D_A,
+                "Loss/D_B": loss_D_B,
             }
+        else:
+            raise ValueError(f"invarid optimizer_idx: {optimizer_idx}")
 
-    def training_step_end(self, out):
-        for name, value in out["log"].items():
+        # logging
+        for name, value in log.items():
             self.log(name, value, on_step=False, on_epoch=True)
+
         return out
 
     def validation_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int):

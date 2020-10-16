@@ -49,7 +49,7 @@ class Scyclone(pl.LightningModule):
         self.D_A = Discriminator()
         self.D_B = Discriminator()
 
-        self.griffinLim = GriffinLim(n_fft=254, n_iter=128)
+        self.griffinLim = GriffinLim(n_fft=254)
 
     def forward(self, x: Tensor) -> Tensor:
         return self.G_A2B(x)
@@ -94,18 +94,34 @@ class Scyclone(pl.LightningModule):
                 + loss_identity_B * self.hparams["weight_identity"]
             )
 
-            output = {
-                "loss": loss_G,
-                "log": {
-                    "Loss/G_total": loss_G,
-                    "Loss/Adv/G_A2B": loss_GAN_A2B,
-                    "Loss/Adv/G_B2A": loss_GAN_B2A,
-                    "Loss/Cyc/A2B2A": loss_cycle_ABA * self.hparams["weight_cycle"],
-                    "Loss/Cyc/B2A2B": loss_cycle_BAB * self.hparams["weight_cycle"],
-                    "Loss/Id/A2A": loss_identity_A * self.hparams["weight_identity"],
-                    "Loss/Id/B2B": loss_identity_B * self.hparams["weight_identity"],
-                },
-            }
+            # Logging
+            self.log("Loss/G_total", loss_G, on_step=False, on_epoch=True)
+            self.log("Loss/Adv/G_A2B", loss_GAN_A2B, on_step=False, on_epoch=True)
+            self.log("Loss/Adv/G_B2A", loss_GAN_B2A, on_step=False, on_epoch=True)
+            self.log(
+                "Loss/Cyc/A2B2A",
+                loss_cycle_ABA * self.hparams["weight_cycle"],
+                on_step=False,
+                on_epoch=True,
+            )
+            self.log(
+                "Loss/Cyc/B2A2B",
+                loss_cycle_BAB * self.hparams["weight_cycle"],
+                on_step=False,
+                on_epoch=True,
+            )
+            self.log(
+                "Loss/Id/A2A",
+                loss_identity_A * self.hparams["weight_identity"],
+                on_step=False,
+                on_epoch=True,
+            )
+            self.log(
+                "Loss/Id/B2B",
+                loss_identity_B * self.hparams["weight_identity"],
+                on_step=False,
+                on_epoch=True,
+            )
             ## registration for Discriminator loop
             self.fake_B = fake_B
             self.fake_A = fake_A
@@ -113,7 +129,7 @@ class Scyclone(pl.LightningModule):
             self.real_B = real_B
             self.real_A = real_A
 
-            return output
+            return {"loss": loss_G}
 
         # Discriminator training
         if optimizer_idx == 1:
@@ -143,29 +159,22 @@ class Scyclone(pl.LightningModule):
 
             # Total
             loss_D = loss_D_A + loss_D_B
-            output = {
-                "loss": loss_D,
-                "log": {
-                    "Loss/D_total": loss_D,
-                    "Loss/D_A": loss_D_A,
-                    "Loss/D_B": loss_D_B,
-                },
-            }
-            return output
 
-    def training_step_end(self, out):
-        self.log_dict(out["log"], on_step=False, on_epoch=True)
+            # Logging
+            self.log("Loss/D_total", loss_D, on_step=False, on_epoch=True)
+            self.log("Loss/D_A", loss_D_A, on_step=False, on_epoch=True)
+            self.log("Loss/D_B", loss_D_B, on_step=False, on_epoch=True)
+            return {"loss": loss_D}
 
     def validation_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int):
         real_A, real_B = batch
         fake_B = self.G_A2B(real_A)
         fake_A = self.G_B2A(real_B)
-        fake_B_wave = self.griffinLim(fake_B)
-        fake_A_wave = self.griffinLim(fake_A)
+        fake_B_wave = self.griffinLim(F.relu(fake_B))
+        fake_A_wave = self.griffinLim(F.relu(fake_A))
         return {"log": {"Validation/A2B": fake_B_wave, "Validation/B2A": fake_A_wave}}
 
     def validation_step_end(self, out) -> None:
-        ## self.logger.experiment.xxx (add wave的な)
         for i in range(0, 2):
             self.logger.experiment.add_audio(
                 "Validation/A2B",
@@ -219,7 +228,8 @@ def cli_main():
         gpus=args.gpus,
         # auto_select_gpus=True,
         max_epochs=400000,  # from Scyclone poster (check my Scyclone summary blog post)
-        check_val_every_n_epoch=1500,  # about 1 validation per 10 min
+        # check_val_every_n_epoch=1500,  # about 1 validation per 10 min
+        check_val_every_n_epoch=1,  # about 1 validation per 10 min
         # reload_dataloaders_every_epoch=True,
         # resume_from_checkpoint="url",
         logger=logger,

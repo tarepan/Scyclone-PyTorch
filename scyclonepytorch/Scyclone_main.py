@@ -168,7 +168,6 @@ class Scyclone(pl.LightningModule):
             return {"loss": loss_D}
 
     def validation_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int):
-        print("validation RUN")
         real_A, real_B = batch
         fake_B = self.G_A2B(real_A)
         fake_A = self.G_B2A(real_B)
@@ -198,7 +197,6 @@ class Scyclone(pl.LightningModule):
                 global_step=self.current_epoch,
                 sample_rate=16000,
             )
-            print("Audio Saved")
 
     def test_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int):
         pass

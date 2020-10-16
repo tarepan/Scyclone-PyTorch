@@ -8,6 +8,8 @@ Reimplmentation of voice conversion system "Scyclone" with PyTorch.
 
 
 ## How to use
+Superfast: click [this url](https://colab.research.google.com/github/tarepan/Scyclone-PyTorch/blob/main/Scyclone_PyTorch.ipynb), that's all!!  
+
 Notebook `Scyclone_PyTorch.ipynb`
 
 ## Original paper

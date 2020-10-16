@@ -229,6 +229,8 @@ def cli_main():
     trainer = pl.Trainer(
         gpus=gpus,
         auto_select_gpus=True,
+        amp_backend="native",
+        amp_level="O1",  # It could be eliminated because PyTorch native amp use only O1 equivalent [forum](https://discuss.pytorch.org/t/torch-cuda-amp-how-to-set-optimization-level/92744)
         max_epochs=400000,  # from Scyclone poster (check my Scyclone summary blog post)
         check_val_every_n_epoch=1500,  # about 1 validation per 10 min
         checkpoint_callback=ckpt_cb,

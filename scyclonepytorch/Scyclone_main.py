@@ -228,8 +228,7 @@ def cli_main():
         gpus=args.gpus,
         # auto_select_gpus=True,
         max_epochs=400000,  # from Scyclone poster (check my Scyclone summary blog post)
-        # check_val_every_n_epoch=1500,  # about 1 validation per 10 min
-        check_val_every_n_epoch=1,  # about 1 validation per 10 min
+        check_val_every_n_epoch=1500,  # about 1 validation per 10 min
         # reload_dataloaders_every_epoch=True,
         # resume_from_checkpoint="url",
         logger=logger,

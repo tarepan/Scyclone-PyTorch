@@ -181,11 +181,13 @@ class Scyclone(pl.LightningModule):
             self.logger.experiment.add_audio(
                 "Validation/A2B",
                 torch.reshape(out["log"]["Validation/A2B"][i], (1, -1)),
+                global_step=self.current_epoch,
                 sample_rate=16000,
             )
             self.logger.experiment.add_audio(
                 "Validation/B2A",
                 torch.reshape(out["log"]["Validation/B2A"][i], (1, -1)),
+                global_step=self.current_epoch,
                 sample_rate=16000,
             )
             print("Audio Saved")

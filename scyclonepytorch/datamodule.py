@@ -33,7 +33,10 @@ class NonParallelSpecDataModule(LightningDataModule):
 
     def train_dataloader(self):
         return DataLoader(
-            self.dataset_train, batch_size=self.batch_size, num_workers=self._num_worker
+            self.dataset_train,
+            batch_size=self.batch_size,
+            num_workers=self._num_worker,
+            shuffle=True,
         )
 
     def val_dataloader(self):
@@ -41,6 +44,7 @@ class NonParallelSpecDataModule(LightningDataModule):
             self.dataset_val,
             batch_size=self.batch_size_val,
             num_workers=self._num_worker,
+            shuffle=True,
         )
 
     def test_dataloader(self):
@@ -48,6 +52,7 @@ class NonParallelSpecDataModule(LightningDataModule):
             self.dataset_test,
             batch_size=self.batch_size_test,
             num_workers=self._num_worker,
+            shuffle=True,
         )
 
 

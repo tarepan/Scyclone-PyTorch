@@ -10,7 +10,7 @@ from npvcc2016.PyTorch.dataset.spectrogram import NpVCC2016_spec  # type: ignore
 
 class NonParallelSpecDataModule(LightningDataModule):
     def __init__(
-        self, batch_size: int = 64, num_workers: int = 4, pin_memory: bool = False
+        self, batch_size: int = 64, num_workers: int = 4, pin_memory: bool = True
     ):
         super().__init__()
         self.batch_size = batch_size

@@ -47,7 +47,6 @@ class NonParallelSpecDataModule(LightningDataModule):
         return DataLoader(
             self.dataset_val,
             batch_size=self.batch_size_val,
-            shuffle=True,
             num_workers=self._num_worker,
             pin_memory=self._pin_memory,
         )
@@ -56,7 +55,6 @@ class NonParallelSpecDataModule(LightningDataModule):
         return DataLoader(
             self.dataset_test,
             batch_size=self.batch_size_test,
-            shuffle=True,
             num_workers=self._num_worker,
             pin_memory=self._pin_memory,
         )

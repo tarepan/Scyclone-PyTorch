@@ -9,10 +9,13 @@ from npvcc2016.PyTorch.dataset.spectrogram import NpVCC2016_spec  # type: ignore
 
 
 class NonParallelSpecDataModule(LightningDataModule):
-    def __init__(self, batch_size: int = 64, num_workers: int = 4):
+    def __init__(
+        self, batch_size: int = 64, num_workers: int = 4, pin_memory: bool = False
+    ):
         super().__init__()
         self.batch_size = batch_size
         self._num_worker = num_workers
+        self._pin_memory = pin_memory
 
     def prepare_data(self, *args, **kwargs) -> None:
         NonParallelSpecDataset(train=True)
@@ -35,24 +38,27 @@ class NonParallelSpecDataModule(LightningDataModule):
         return DataLoader(
             self.dataset_train,
             batch_size=self.batch_size,
-            num_workers=self._num_worker,
             shuffle=True,
+            num_workers=self._num_worker,
+            pin_memory=self._pin_memory,
         )
 
     def val_dataloader(self):
         return DataLoader(
             self.dataset_val,
             batch_size=self.batch_size_val,
-            num_workers=self._num_worker,
             shuffle=True,
+            num_workers=self._num_worker,
+            pin_memory=self._pin_memory,
         )
 
     def test_dataloader(self):
         return DataLoader(
             self.dataset_test,
             batch_size=self.batch_size_test,
-            num_workers=self._num_worker,
             shuffle=True,
+            num_workers=self._num_worker,
+            pin_memory=self._pin_memory,
         )
 
 

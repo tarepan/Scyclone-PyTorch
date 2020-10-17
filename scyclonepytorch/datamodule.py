@@ -91,8 +91,8 @@ def pad_clip(d: Tensor) -> Tensor:
 
 class NonParallelSpecDataset(Dataset):
     def __init__(self, train: bool):
-        self.datasetA = NpVCC2016_spec(".", train, True, ["SF1"], pad_clip)
-        self.datasetB = NpVCC2016_spec(".", train, True, ["TF2"], pad_clip)
+        self.datasetA = NpVCC2016_spec(".", train, True, ["SF1"], pad_clip, True)
+        self.datasetB = NpVCC2016_spec(".", train, True, ["TF2"], pad_clip, True)
 
     def __getitem__(self, n: int):
         """Load the n-th sample from the dataset.

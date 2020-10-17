@@ -13,7 +13,7 @@ from pytorch_lightning.profiler import AdvancedProfiler
 # currently there is no stub in npvcc2016
 from torchaudio.transforms import GriffinLim  # type: ignore
 
-from .datamodule import NonParallelSpecDataModule
+from .datamodule import DataLoaderPerformance, NonParallelSpecDataModule
 from .modules import Generator, Discriminator
 
 # codes are inspired by CycleGAN family with PyTorch Lightning https://github.com/HasnainRaz/Fast-AgingGAN/blob/master/gan_module.py
@@ -226,7 +226,8 @@ def cli_main():
     # setup
     gpus: int = 1 if torch.cuda.is_available() else 0  # single GPU or CPU
     model = Scyclone()
-    datamodule = NonParallelSpecDataModule(64, args.num_workers, not args.no_pin_memory)
+    loader_perf = DataLoaderPerformance(args.num_workers, not args.no_pin_memory)
+    datamodule = NonParallelSpecDataModule(64, loader_perf)
     logger = pl_loggers.TensorBoardLogger("logs/")
     ckpt_cb = ModelCheckpoint(period=60)
 

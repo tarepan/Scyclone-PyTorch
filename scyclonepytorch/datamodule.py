@@ -1,3 +1,4 @@
+from typing import NamedTuple
 import torch
 from torch.tensor import Tensor
 from torch.utils.data import Dataset
@@ -8,14 +9,26 @@ from pytorch_lightning import LightningDataModule
 from npvcc2016.PyTorch.dataset.spectrogram import NpVCC2016_spec  # type: ignore
 
 
+class DataLoaderPerformance(NamedTuple):
+    """
+    All attributes which affect performance of [torch.utils.data.DataLoader][^DataLoader] @ v1.6.0
+    [^DataLoader]:https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader
+    """
+
+    num_workers: int
+    pin_memory: bool
+
+
 class NonParallelSpecDataModule(LightningDataModule):
     def __init__(
-        self, batch_size: int = 64, num_workers: int = 4, pin_memory: bool = True
+        self,
+        batch_size: int = 64,
+        performance: DataLoaderPerformance = DataLoaderPerformance(4, True),
     ):
         super().__init__()
         self.batch_size = batch_size
-        self._num_worker = num_workers
-        self._pin_memory = pin_memory
+        self._num_worker = performance.num_workers
+        self._pin_memory = performance.pin_memory
 
     def prepare_data(self, *args, **kwargs) -> None:
         NonParallelSpecDataset(train=True)

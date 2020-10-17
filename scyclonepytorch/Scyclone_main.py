@@ -215,6 +215,7 @@ def cli_main():
     parser = ArgumentParser()
     parser.add_argument("--checkpoint", default=None, type=str)
     parser.add_argument("--numworker", default=4, type=int)
+    parser.add_argument("--pinmemory", default=False, type=bool)
     parser.add_argument("--profiler", default=None, type=bool)
     parser.add_argument("--max_epochs", default=400000, type=int)
     # optional... automatically add all the params
@@ -224,7 +225,7 @@ def cli_main():
     # setup
     gpus: int = 1 if torch.cuda.is_available() else 0  # single GPU or CPU
     model = Scyclone()
-    datamodule = NonParallelSpecDataModule(64, args.numworker)
+    datamodule = NonParallelSpecDataModule(64, args.numworker, args.pinmemory)
     logger = pl_loggers.TensorBoardLogger("logs/")
     ckpt_cb = ModelCheckpoint(period=60)
 

@@ -216,8 +216,8 @@ def cli_main():
     parser.add_argument("--checkpoint", default=None, type=str)
     parser.add_argument("--num_workers", default=2, type=int)
     parser.add_argument("--no_pin_memory", action="store_true")
-    # args.profiler == `--profiler` ? bool<True> : bool<False>
     parser.add_argument("--profiler", action="store_true")
+    # max: from Scyclone poster (check my Scyclone summary blog post)
     parser.add_argument("--max_epochs", default=400000, type=int)
     # optional... automatically add all the params
     # parser = pl.Trainer.add_argparse_args(parser)
@@ -236,7 +236,6 @@ def cli_main():
         auto_select_gpus=True,
         amp_backend="native",
         amp_level="O1",  # It could be eliminated because PyTorch native amp use only O1 equivalent [forum](https://discuss.pytorch.org/t/torch-cuda-amp-how-to-set-optimization-level/92744)
-        # from Scyclone poster (check my Scyclone summary blog post)
         max_epochs=args.max_epochs,
         check_val_every_n_epoch=1500,  # about 1 validation per 10 min
         checkpoint_callback=ckpt_cb,

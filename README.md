@@ -20,7 +20,9 @@ Jump to **[Notebook in Google Colaboratory][notebook]**, then Run. that's all!!
 ## Install
 (If your machine needs specific PyTorch version (e.g. old CUDA compatible version), install it before Scyclone installation.)  
 
-`pip install git+https://github.com/tarepan/Scyclone-PyTorch`
+```bash
+pip install git+https://github.com/tarepan/Scyclone-PyTorch
+```
 
 ## Original paper
 [![Paper](http://img.shields.io/badge/paper-arxiv.2005.03334-B31B1B.svg)][paper]  

@@ -16,7 +16,16 @@ Jump to [Colaboratory Notebook](https://colab.research.google.com/github/tarepan
 `pip install git+https://github.com/tarepan/Scyclone-PyTorch`
 
 ## Original paper
-Masaya Tanaka, et al.. (2020). [Scyclone: High-Quality and Parallel-Data-Free Voice Conversion Using Spectrogram and Cycle-Consistent Adversarial Networks](https://arxiv.org/abs/2005.03334). Arxiv 2005.03334.
+[![Paper](http://img.shields.io/badge/paper-arxiv.2005.03334-B31B1B.svg)](https://arxiv.org/abs/2005.03334)  
+<!-- https://arxiv2bibtex.org/?q=2005.03334&format=bibtex -->
+```
+@misc{2005.03334,
+Author = {Masaya Tanaka and Takashi Nose and Aoi Kanagaki and Ryohei Shimizu and Akira Ito},
+Title = {Scyclone: High-Quality and Parallel-Data-Free Voice Conversion Using Spectrogram and Cycle-Consistent Adversarial Networks},
+Year = {2020},
+Eprint = {arXiv:2005.03334},
+}
+```
 
 ## Dependency Notes
 ### PyTorch version

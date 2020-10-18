@@ -1,17 +1,16 @@
+<div align="center">
 # Scyclone-PyTorch
 [![Paper](http://img.shields.io/badge/paper-arxiv.2005.03334-B31B1B.svg)](https://arxiv.org/abs/2005.03334)  
+</div>
 Reimplmentation of voice conversion system "Scyclone" with PyTorch.
+
+## How to run
+Jump to [Colaboratory Notebook](https://colab.research.google.com/github/tarepan/Scyclone-PyTorch/blob/main/Scyclone_PyTorch.ipynb), then Run. that's all!!  
 
 ## Install
 (If your machine needs specific PyTorch version (e.g. old CUDA compatible version), install it before Scyclone installation.)  
 
 `pip install git+https://github.com/tarepan/Scyclone-PyTorch`
-
-
-## How to use
-Superfast: click [this url](https://colab.research.google.com/github/tarepan/Scyclone-PyTorch/blob/main/Scyclone_PyTorch.ipynb), that's all!!  
-
-Notebook `Scyclone_PyTorch.ipynb`
 
 ## Original paper
 Masaya Tanaka, et al.. (2020). [Scyclone: High-Quality and Parallel-Data-Free Voice Conversion Using Spectrogram and Cycle-Consistent Adversarial Networks](https://arxiv.org/abs/2005.03334). Arxiv 2005.03334.

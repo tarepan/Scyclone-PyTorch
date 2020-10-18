@@ -8,13 +8,17 @@
 
 Reimplmentation of voice conversion system "Scyclone" with PyTorch.
 
+- [Demo](#demo)
 - [How to run](#how-to-run)
 - [Install](#install)
 - [Original paper](#original-paper)
 - [Dependency Notes](#dependency-notes)
-  - [PyTorch version](#pytorch-version)
+
+## Demo
+Link super great impressive high-quatity audio demo.
 
 ## How to run
+### Training <!-- omit in toc -->
 Jump to **[Notebook in Google Colaboratory][notebook]**, then Run. that's all!!  
 
 ## Install
@@ -37,7 +41,7 @@ Eprint = {arXiv:2005.03334},
 ```
 
 ## Dependency Notes
-### PyTorch version
+### PyTorch version <!-- omit in toc -->
 PyTorch version: PyTorch v1.6 is working (We checked with v1.6.0).  
 
 For dependency resolution, we do **NOT** explicitly specify the compatible versions.  

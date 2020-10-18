@@ -1,4 +1,5 @@
 # Scyclone-PyTorch
+[![Paper](http://img.shields.io/badge/paper-arxiv.2005.03334-B31B1B.svg)](https://arxiv.org/abs/2005.03334)  
 Reimplmentation of voice conversion system "Scyclone" with PyTorch.
 
 ## Install

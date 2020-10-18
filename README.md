@@ -1,12 +1,18 @@
 <div align="center">
 
-# Scyclone-PyTorch
+# Scyclone-PyTorch <!-- omit in toc -->
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)][notebook]
 [![Paper](http://img.shields.io/badge/paper-arxiv.2005.03334-B31B1B.svg)][paper]  
 
 </div>
 
 Reimplmentation of voice conversion system "Scyclone" with PyTorch.
+
+- [How to run](#how-to-run)
+- [Install](#install)
+- [Original paper](#original-paper)
+- [Dependency Notes](#dependency-notes)
+  - [PyTorch version](#pytorch-version)
 
 ## How to run
 Jump to **[Notebook in Google Colaboratory][notebook]**, then Run. that's all!!  

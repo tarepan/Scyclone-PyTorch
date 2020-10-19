@@ -12,6 +12,7 @@ Reimplmentation of voice conversion system "Scyclone" with PyTorch.
 - [How to run](#how-to-run)
 - [Install](#install)
 - [Original paper](#original-paper)
+- [Difference from original research](#difference-from-original-research)
 - [Dependency Notes](#dependency-notes)
 
 ## Demo
@@ -41,6 +42,10 @@ Eprint = {arXiv:2005.03334},
 ```
 
 **[Original Paper's Demo](http://www.spcom.ecei.tohoku.ac.jp/nose/research/scyclone_202001/)**
+
+## Difference from original research
+- (Currently) no Gaussian noise in Discriminator
+- Datum length is based on a paper, not poster (G160/D128 in paper, G240/D240 in poster. Detail is in my summary blog)
 
 ## Dependency Notes
 ### PyTorch version <!-- omit in toc -->

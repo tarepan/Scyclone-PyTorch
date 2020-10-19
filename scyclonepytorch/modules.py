@@ -119,4 +119,4 @@ class Discriminator(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         # "We add small Gaussian noise following N (0, 0.01) to the input of the discriminator" from Scyclone paper
-        return self.model(x + torch.randn(x.size().to(self._device)) * 0.01)
+        return self.model(x + torch.randn(x.size(), device=self._device) * 0.01)

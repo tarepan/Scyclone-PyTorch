@@ -70,10 +70,10 @@ class Scyclone(pl.LightningModule):
         if optimizer_idx == 0:
             # Generator adversarial losses: hinge loss (from Scyclone paper eq.1)
             fake_B = self.G_A2B(real_A)
-            pred_fake_B = self.D_B(fake_B)
+            pred_fake_B = self.D_B(torch.narrow(fake_B, 2, 16, 128))
             loss_GAN_A2B = torch.mean(F.relu(-1.0 * pred_fake_B))
             fake_A = self.G_B2A(real_B)
-            pred_fake_A = self.D_A(fake_A)
+            pred_fake_A = self.D_A(torch.narrow(fake_A, 2, 16, 128))
             loss_GAN_B2A = torch.mean(F.relu(-1.0 * pred_fake_A))
 
             # cycle consistency losses: L1 loss (from Scyclone paper eq.1)

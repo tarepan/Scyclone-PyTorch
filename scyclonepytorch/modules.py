@@ -1,5 +1,6 @@
 from typing import List
 from torch import Tensor
+import torch
 import torch.nn as nn
 
 
@@ -85,10 +86,11 @@ class Discriminator(nn.Module):
     Scyclone Discriminator
     """
 
-    def __init__(self):
+    def __init__(self, n_batch: int = 64):
         super(Discriminator, self).__init__()
 
         # params
+        _n_N: int = n_batch
         n_C_freq: int = 128
         n_C_trunk: int = 256
         ## "In this study, we set nG and nD to 7 and 6, respectively" from Scyclone paper
@@ -116,6 +118,5 @@ class Discriminator(nn.Module):
         self.model = nn.Sequential(*blocks)
 
     def forward(self, x: Tensor) -> Tensor:
-        # [todo]
         # "We add small Gaussian noise following N (0, 0.01) to the input of the discriminator" from Scyclone paper
-        return self.model(x)
+        return self.model(x + torch.randn((self._n_N, 128, 128)) * 0.01)

@@ -5,6 +5,8 @@ from argparse import ArgumentParser
 import torch
 from torch.nn import functional as F
 from torch.tensor import Tensor
+from torch.optim import Adam
+from torch.optim.lr_scheduler import StepLR
 import pytorch_lightning as pl
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -193,18 +195,27 @@ class Scyclone(pl.LightningModule):
         """
         return G/D optimizers
         """
-
-        optim_G = torch.optim.Adam(
+        decay_rate = 0.1
+        decay_iter = 100000
+        optim_G = Adam(
             itertools.chain(self.G_A2B.parameters(), self.G_B2A.parameters()),
             lr=self.hparams["learning_rate"],
             betas=(0.5, 0.999),
         )
-        optim_D = torch.optim.Adam(
+        sched_G = {
+            "scheduler": StepLR(optim_G, decay_iter, decay_rate),
+            "interval": "step",
+        }
+        optim_D = Adam(
             itertools.chain(self.D_A.parameters(), self.D_B.parameters()),
             lr=self.hparams["learning_rate"],
             betas=(0.5, 0.999),
         )
-        return [optim_G, optim_D], []
+        sched_D = {
+            "scheduler": StepLR(optim_D, decay_iter, decay_rate),
+            "interval": "step",
+        }
+        return [optim_G, optim_D], [sched_G, sched_D]
 
 
 def cli_main():

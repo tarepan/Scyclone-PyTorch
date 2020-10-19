@@ -40,6 +40,8 @@ Eprint = {arXiv:2005.03334},
 }
 ```
 
+**[Original Paper's Demo](http://www.spcom.ecei.tohoku.ac.jp/nose/research/scyclone_202001/)**
+
 ## Dependency Notes
 ### PyTorch version <!-- omit in toc -->
 PyTorch version: PyTorch v1.6 is working (We checked with v1.6.0).  

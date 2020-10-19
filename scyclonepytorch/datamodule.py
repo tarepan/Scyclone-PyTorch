@@ -109,7 +109,11 @@ class NonParallelSpecDataset(Dataset):
 
     def __getitem__(self, n: int):
         """Load the n-th sample from the dataset.
-        [todo]: Are there any way to yield different pair each epoch?
+        Potential problem: A/B pair
+        Current implementation yield fixed A/B pair.
+        When batch size is small (e.g. 1), Batch_A and Batch_B has strong correlation.
+        If big batch, correlation decrease so little problem.
+        We could solve this problem through sampler (e.g. sampler + sampler reset).
         """
         # ignore label
         return (self.datasetA[n][0], self.datasetB[n][0])

@@ -238,6 +238,7 @@ def cli_main():
     # args
     parser = ArgumentParser()
     parser.add_argument("--checkpoint", default=None, type=str)
+    parser.add_argument("--no_amp", action="store_true")
     parser.add_argument("--num_workers", default=2, type=int)
     parser.add_argument("--no_pin_memory", action="store_true")
     parser.add_argument("--profiler", action="store_true")
@@ -258,8 +259,7 @@ def cli_main():
     trainer = pl.Trainer(
         gpus=gpus,
         auto_select_gpus=True,
-        amp_backend="native",
-        amp_level="O1",  # It could be eliminated because PyTorch native amp use only O1 equivalent [forum](https://discuss.pytorch.org/t/torch-cuda-amp-how-to-set-optimization-level/92744)
+        precision=32 if args.no_amp else 16,  # default AMP
         max_epochs=args.max_epochs,
         check_val_every_n_epoch=1500,  # about 1 validation per 10 min
         checkpoint_callback=ckpt_cb,

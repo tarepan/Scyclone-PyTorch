@@ -45,6 +45,7 @@ Eprint = {arXiv:2005.03334},
 
 ## Difference from original research
 - Datum length is based on a paper, not poster (G160/D128 in paper, G240/D240 in poster. Detail is in my summary blog)
+- Use Automatic Mixed Precision training (FP32 training is also supported through `no_amp` flag)
 
 ## Dependency Notes
 ### PyTorch version <!-- omit in toc -->

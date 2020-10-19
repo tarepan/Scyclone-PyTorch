@@ -102,7 +102,6 @@ class Scyclone(pl.LightningModule):
             self.fake_B = fake_B
             self.fake_A = fake_A
 
-            out = {"loss": loss_G}
             log = {
                 "Loss/G_total": loss_G,
                 "Loss/Adv/G_B2A": loss_GAN_B2A,
@@ -112,6 +111,7 @@ class Scyclone(pl.LightningModule):
                 "Loss/Id/A2A": loss_identity_A * self.hparams["weight_identity"],
                 "Loss/Id/B2B": loss_identity_B * self.hparams["weight_identity"],
             }
+            out = {"loss": loss_G, "log_losses": log}
 
         # Discriminator training
         elif optimizer_idx == 1:
@@ -142,32 +142,41 @@ class Scyclone(pl.LightningModule):
             # Total
             loss_D = loss_D_A + loss_D_B
 
-            out = {"loss": loss_D}
             log = {
                 "Loss/D_total": loss_D,
                 "Loss/D_A": loss_D_A,
                 "Loss/D_B": loss_D_B,
             }
+            out = {"loss": loss_D, "log_losses": log}
+
         else:
             raise ValueError(f"invarid optimizer_idx: {optimizer_idx}")
+        return out
 
+    def training_step_end(self, out):
         # logging
-        for name, value in log.items():
+        for name, value in out["log_losses"].items():
             self.log(name, value, on_step=False, on_epoch=True)
-
         return out
 
     def validation_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int):
+        # G
+        o_G = self.training_step(batch, batch_idx, 0)
+        o_D = self.training_step(batch, batch_idx, 1)
         real_A, real_B = batch
         fake_B = self.G_A2B(real_A)
         fake_A = self.G_B2A(real_B)
         fake_B_wave = self.griffinLim(F.relu(fake_B))
         fake_A_wave = self.griffinLim(F.relu(fake_A))
-        return {"log": {"Validation/A2B": fake_B_wave, "Validation/B2A": fake_A_wave}}
+        return {
+            "wave": {"Validation/A2B": fake_B_wave, "Validation/B2A": fake_A_wave},
+            "loss": {"G": o_G["log_losses"], "D": o_D["log_losses"]},
+        }
 
     def validation_step_end(self, out) -> None:
+        # waveform logging
         for i in range(0, 2):
-            a2b = out["log"]["Validation/A2B"][i]
+            a2b = out["wave"]["Validation/A2B"][i]
             max_a2b = torch.max(a2b, 0, keepdim=True).values
             min_a2b = torch.min(a2b, 0, keepdim=True).values
             scaler_a2b = torch.max(torch.cat((torch.abs(max_a2b), torch.abs(min_a2b))))
@@ -177,7 +186,7 @@ class Scyclone(pl.LightningModule):
                 global_step=self.current_epoch,
                 sample_rate=16000,
             )
-            b2a = out["log"]["Validation/B2A"][i]
+            b2a = out["wave"]["Validation/B2A"][i]
             max_b2a = torch.max(b2a, 0, keepdim=True).values
             min_b2a = torch.min(b2a, 0, keepdim=True).values
             scaler_b2a = torch.max(torch.cat((torch.abs(max_b2a), torch.abs(min_b2a))))
@@ -187,6 +196,10 @@ class Scyclone(pl.LightningModule):
                 global_step=self.current_epoch,
                 sample_rate=16000,
             )
+        # loss logging
+        for gd in ["G", "D"]:
+            for name, value in out["loss"][gd].items():
+                self.log(name, value, on_step=False, on_epoch=True)
 
     def test_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int):
         pass

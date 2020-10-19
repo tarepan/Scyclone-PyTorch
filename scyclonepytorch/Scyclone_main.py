@@ -199,7 +199,7 @@ class Scyclone(pl.LightningModule):
         # loss logging
         for gd in ["G", "D"]:
             for name, value in out["loss"][gd].items():
-                self.log(name, value, on_step=False, on_epoch=True)
+                self.log(f"Validation/{name}", value, on_step=False, on_epoch=True)
 
     def test_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int):
         pass

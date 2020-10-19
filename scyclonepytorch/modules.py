@@ -90,7 +90,7 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
 
         # params
-        _n_N: int = n_batch
+        self._n_N: int = n_batch
         n_C_freq: int = 128
         n_C_trunk: int = 256
         ## "In this study, we set nG and nD to 7 and 6, respectively" from Scyclone paper

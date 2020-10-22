@@ -124,7 +124,8 @@ class Scyclone(pl.LightningModule):
             pred_A_real = self.D_A(torch.narrow(real_A, 2, 16, 128))
             loss_D_A_real = torch.mean(F.relu(m - pred_A_real))
             ## Fake loss
-            pred_A_fake = self.D_A(torch.narrow(self.fake_A.detach(), 2, 16, 128))
+            fake_A = self.G_B2A(real_B)
+            pred_A_fake = self.D_A(torch.narrow(fake_A, 2, 16, 128))
             loss_D_A_fake = torch.mean(F.relu(m + pred_A_fake))
             ## D_A total loss
             loss_D_A = loss_D_A_real + loss_D_A_fake
@@ -134,7 +135,8 @@ class Scyclone(pl.LightningModule):
             pred_B_real = self.D_B(torch.narrow(real_B, 2, 16, 128))
             loss_D_B_real = torch.mean(F.relu(m - pred_B_real))
             ## Fake loss
-            pred_B_fake = self.D_B(torch.narrow(self.fake_B.detach(), 2, 16, 128))
+            fake_B = self.G_A2B(real_A)
+            pred_B_fake = self.D_B(torch.narrow(fake_B, 2, 16, 128))
             loss_D_B_fake = torch.mean(F.relu(m + pred_B_fake))
             ## D_B total loss
             loss_D_B = loss_D_B_real + loss_D_B_fake

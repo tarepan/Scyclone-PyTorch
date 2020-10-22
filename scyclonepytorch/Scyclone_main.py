@@ -33,7 +33,7 @@ class Scyclone(pl.LightningModule):
     Origin: Masaya Tanaka, et al.. (2020). Scyclone: High-Quality and Parallel-Data-Free Voice Conversion Using Spectrogram and Cycle-Consistent Adversarial Networks. Arxiv 2005.03334.
     """
 
-    def __init__(self, _=True):
+    def __init__(self, noiseless_D: bool = False):
         super().__init__()
 
         # params
@@ -50,8 +50,8 @@ class Scyclone(pl.LightningModule):
 
         self.G_A2B = Generator()
         self.G_B2A = Generator()
-        self.D_A = Discriminator()
-        self.D_B = Discriminator()
+        self.D_A = Discriminator(noise_sigma=0 if noiseless_D else 0.01)
+        self.D_B = Discriminator(noise_sigma=0 if noiseless_D else 0.01)
 
         self.griffinLim = GriffinLim(n_fft=254, n_iter=256)
 
@@ -247,10 +247,11 @@ def cli_main():
     # optional... automatically add all the params
     # parser = pl.Trainer.add_argparse_args(parser)
     # parser = MNISTDataModule.add_argparse_args(parser)
+    parser.add_argument("--noiseless_d", action="store_true")
     args = parser.parse_args()
     # setup
     gpus: int = 1 if torch.cuda.is_available() else 0  # single GPU or CPU
-    model = Scyclone()
+    model = Scyclone(args.noiseless_d)
     loader_perf = DataLoaderPerformance(args.num_workers, not args.no_pin_memory)
     datamodule = NonParallelSpecDataModule(64, loader_perf)
     logger = pl_loggers.TensorBoardLogger("logs/")

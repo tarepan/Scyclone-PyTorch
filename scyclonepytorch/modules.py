@@ -86,7 +86,7 @@ class Discriminator(nn.Module):
     Scyclone Discriminator
     """
 
-    def __init__(self):
+    def __init__(self, noise_sigma: float = 0.01):
         super().__init__()
 
         # params
@@ -96,6 +96,7 @@ class Discriminator(nn.Module):
         n_ResBlock_D: int = 6
         lr: float = 0.2
 
+        self._noise_sigma = noise_sigma
         self._device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         # channel adjustment with pointwiseConv
         ## "We used leaky rectified linear units" from Scyclone paper
@@ -119,4 +120,6 @@ class Discriminator(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         # "We add small Gaussian noise following N (0, 0.01) to the input of the discriminator" from Scyclone paper
-        return self.model(x + torch.randn(x.size(), device=self._device) * 0.01)
+        return self.model(
+            x + torch.randn(x.size(), device=self._device) * self._noise_sigma
+        )

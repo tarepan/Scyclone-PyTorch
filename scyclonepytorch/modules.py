@@ -6,7 +6,7 @@ import torch.nn as nn
 
 class ResidualBlock_G(nn.Module):
     def __init__(self, C: int, lr: float):
-        super(ResidualBlock_G, self).__init__()
+        super().__init__()
 
         # params
         ## "residual blocks consisting of two convolutional layers with a kernel size five" from Scyclone paper
@@ -29,7 +29,7 @@ class Generator(nn.Module):
     """
 
     def __init__(self):
-        super(Generator, self).__init__()
+        super().__init__()
 
         # params
         n_C_freq: int = 128
@@ -61,7 +61,7 @@ class Generator(nn.Module):
 
 class ResidualSNBlock_D(nn.Module):
     def __init__(self, C: int, lr: float):
-        super(ResidualSNBlock_D, self).__init__()
+        super().__init__()
 
         # params
         ## "residual blocks consisting of two convolutional layers with a kernel size five" from Scyclone paper
@@ -87,7 +87,7 @@ class Discriminator(nn.Module):
     """
 
     def __init__(self):
-        super(Discriminator, self).__init__()
+        super().__init__()
 
         # params
         n_C_freq: int = 128

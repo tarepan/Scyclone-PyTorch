@@ -86,7 +86,7 @@ class Discriminator(nn.Module):
     Scyclone Discriminator
     """
 
-    def __init__(self, n_batch: int = 64):
+    def __init__(self):
         super(Discriminator, self).__init__()
 
         # params

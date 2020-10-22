@@ -120,7 +120,7 @@ class Scyclone(pl.LightningModule):
             pred_A_real = self.D_A(torch.narrow(real_A, 2, 16, 128))
             loss_D_A_real = torch.mean(F.relu(m - pred_A_real))
             ## Fake loss
-            fake_A = self.G_B2A(real_B)
+            fake_A = self.G_B2A(real_B)  # no_grad by PyTorch-Lightning
             pred_A_fake = self.D_A(torch.narrow(fake_A, 2, 16, 128))
             loss_D_A_fake = torch.mean(F.relu(m + pred_A_fake))
             ## D_A total loss
@@ -131,7 +131,7 @@ class Scyclone(pl.LightningModule):
             pred_B_real = self.D_B(torch.narrow(real_B, 2, 16, 128))
             loss_D_B_real = torch.mean(F.relu(m - pred_B_real))
             ## Fake loss
-            fake_B = self.G_A2B(real_A)
+            fake_B = self.G_A2B(real_A)  # no_grad by PyTorch-Lightning
             pred_B_fake = self.D_B(torch.narrow(fake_B, 2, 16, 128))
             loss_D_B_fake = torch.mean(F.relu(m + pred_B_fake))
             ## D_B total loss
@@ -158,9 +158,10 @@ class Scyclone(pl.LightningModule):
         return out
 
     def validation_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int):
-        # G
+        # loss calculation
         o_G = self.training_step(batch, batch_idx, 0)
         o_D = self.training_step(batch, batch_idx, 1)
+        # sample conversion
         real_A, real_B = batch
         fake_B = self.G_A2B(real_A)
         fake_A = self.G_B2A(real_B)

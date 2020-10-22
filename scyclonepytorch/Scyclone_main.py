@@ -98,10 +98,6 @@ class Scyclone(pl.LightningModule):
                 + loss_identity_B * self.hparams["weight_identity"]
             )
 
-            ## registration for Discriminator loop
-            self.fake_B = fake_B
-            self.fake_A = fake_A
-
             log = {
                 "Loss/G_total": loss_G,
                 "Loss/Adv/G_B2A": loss_GAN_B2A,

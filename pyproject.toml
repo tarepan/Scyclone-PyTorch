@@ -9,7 +9,7 @@ repository = "https://github.com/tarepan/Scyclone-PyTorch"
 [tool.poetry.dependencies]
 python = "^3.6.1"
 torch = "*"
-pytorch-lightning = "^1.0.3"
+pytorch-lightning = {git = "https://github.com/PyTorchLightning/pytorch-lightning.git", rev = "1.0.4rc1"}
 npvcc2016 = "^1.1.0"
 torchaudio = "^0.6.0"
 

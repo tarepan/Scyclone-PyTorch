@@ -254,8 +254,8 @@ def cli_main():
     loader_perf = DataLoaderPerformance(args.num_workers, not args.no_pin_memory)
     datamodule = NonParallelSpecDataModule(64, loader_perf)
     logger = pl_loggers.TensorBoardLogger("logs/")
-    ckpt_cb = ModelCheckpoint(period=60)
-
+    # Save latest model (∵ monitor=None) every `period` epoch in `{default_root_dir}/`
+    ckpt_cb = ModelCheckpoint(period=60, filename="last")
     trainer = pl.Trainer(
         gpus=gpus,
         auto_select_gpus=True,

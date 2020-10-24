@@ -238,6 +238,7 @@ def cli_main():
     parser = ArgumentParser()
     parser.add_argument("--dir_exp", default=None, type=str)
     parser.add_argument("--checkpoint", default=None, type=str)
+    parser.add_argument("--weights_save_path", default=None, type=str)
     parser.add_argument("--no_amp", action="store_true")
     parser.add_argument("--num_workers", default=2, type=int)
     parser.add_argument("--no_pin_memory", action="store_true")
@@ -255,7 +256,8 @@ def cli_main():
     loader_perf = DataLoaderPerformance(args.num_workers, not args.no_pin_memory)
     datamodule = NonParallelSpecDataModule(64, loader_perf)
     # Save latest model (∵ monitor=None) every `period` epoch in `{default_root_dir}/`
-    ckpt_cb = ModelCheckpoint(period=60, filename="last")
+    # ckpt_cb = ModelCheckpoint(period=60, filename="last")
+    ckpt_cb = ModelCheckpoint(period=60)
     trainer = pl.Trainer(
         gpus=gpus,
         auto_select_gpus=True,
@@ -266,6 +268,7 @@ def cli_main():
         resume_from_checkpoint=args.checkpoint,
         # save
         default_root_dir=args.dir_exp,
+        weights_save_path=args.weights_save_path,
         checkpoint_callback=ckpt_cb,
         logger=pl_loggers.TensorBoardLogger(args.dir_exp if args.dir_exp else "logs/"),
         # reload_dataloaders_every_epoch=True,

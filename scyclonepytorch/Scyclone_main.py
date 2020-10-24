@@ -254,7 +254,6 @@ def cli_main():
     model = Scyclone(args.noiseless_d)
     loader_perf = DataLoaderPerformance(args.num_workers, not args.no_pin_memory)
     datamodule = NonParallelSpecDataModule(64, loader_perf)
-    logger = pl_loggers.TensorBoardLogger("logs/")
     # Save latest model (∵ monitor=None) every `period` epoch in `{default_root_dir}/`
     ckpt_cb = ModelCheckpoint(period=60, filename="last")
     trainer = pl.Trainer(
@@ -263,11 +262,13 @@ def cli_main():
         precision=32 if args.no_amp else 16,  # default AMP
         max_epochs=args.max_epochs,
         check_val_every_n_epoch=1500,  # about 1 validation per 10 min
-        checkpoint_callback=ckpt_cb,
-        resume_from_checkpoint=args.checkpoint,  # last.ckpt
+        # load/resume
+        resume_from_checkpoint=args.checkpoint,
+        # save
         default_root_dir=args.dir_exp,
+        checkpoint_callback=ckpt_cb,
+        logger=pl_loggers.TensorBoardLogger(args.dir_exp if args.dir_exp else "logs/"),
         # reload_dataloaders_every_epoch=True,
-        logger=logger,
         profiler=AdvancedProfiler() if args.profiler else None,
     )
 

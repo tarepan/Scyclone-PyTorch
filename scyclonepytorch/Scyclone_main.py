@@ -236,6 +236,7 @@ def cli_main():
 
     # args
     parser = ArgumentParser()
+    parser.add_argument("--dir_exp", default=None, type=str)
     parser.add_argument("--checkpoint", default=None, type=str)
     parser.add_argument("--no_amp", action="store_true")
     parser.add_argument("--num_workers", default=2, type=int)
@@ -263,9 +264,10 @@ def cli_main():
         max_epochs=args.max_epochs,
         check_val_every_n_epoch=1500,  # about 1 validation per 10 min
         checkpoint_callback=ckpt_cb,
+        resume_from_checkpoint=args.checkpoint,  # last.ckpt
+        default_root_dir=args.dir_exp,
         # reload_dataloaders_every_epoch=True,
         logger=logger,
-        resume_from_checkpoint=args.checkpoint,
         profiler=AdvancedProfiler() if args.profiler else None,
     )
 

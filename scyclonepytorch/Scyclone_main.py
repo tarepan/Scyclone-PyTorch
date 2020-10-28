@@ -257,7 +257,7 @@ def cli_main():
     datamodule = NonParallelSpecDataModule(64, loader_perf)
     # Save latest model (∵ monitor=None) every `period` epoch
     #   at `{default_root_dir}/default/version_{n}/checkpoints/last.ckpt`
-    ckpt_cb = ModelCheckpoint(period=60, save_last=True)
+    ckpt_cb = ModelCheckpoint(period=60, save_top_k=None, monitor=None)
     trainer = pl.Trainer(
         gpus=gpus,
         auto_select_gpus=True,

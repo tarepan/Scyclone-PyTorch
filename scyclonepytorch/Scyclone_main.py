@@ -255,9 +255,9 @@ def cli_main():
     model = Scyclone(args.noiseless_d)
     loader_perf = DataLoaderPerformance(args.num_workers, not args.no_pin_memory)
     datamodule = NonParallelSpecDataModule(64, loader_perf)
-    # Save latest model (∵ monitor=None) every `period` epoch in `{default_root_dir}/`
-    # ckpt_cb = ModelCheckpoint(period=60, filename="last")
-    ckpt_cb = ModelCheckpoint(period=60)
+    # Save latest model (∵ monitor=None) every `period` epoch
+    #   at `{default_root_dir}/default/version_{n}/checkpoints/last.ckpt`
+    ckpt_cb = ModelCheckpoint(period=60, save_last=True)
     trainer = pl.Trainer(
         gpus=gpus,
         auto_select_gpus=True,

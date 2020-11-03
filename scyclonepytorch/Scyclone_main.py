@@ -18,13 +18,10 @@ from torchaudio.transforms import GriffinLim  # type: ignore
 from .datamodule import DataLoaderPerformance, NonParallelSpecDataModule
 from .modules import Generator, Discriminator
 
-# codes are inspired by CycleGAN family with PyTorch Lightning https://github.com/HasnainRaz/Fast-AgingGAN/blob/master/gan_module.py
 
-"""
-G: Generator
-D: Discriminator
-A2B: map A to B (c.f. B2A)
-"""
+# G: Generator
+# D: Discriminator
+# X2Y: map X to Y (e.g. B2A)
 
 
 class Scyclone(pl.LightningModule):
@@ -71,10 +68,10 @@ class Scyclone(pl.LightningModule):
             # Generator adversarial losses: hinge loss (from Scyclone paper eq.1)
             fake_B = self.G_A2B(real_A)
             pred_fake_B = self.D_B(torch.narrow(fake_B, 2, 16, 128))
-            loss_GAN_A2B = torch.mean(F.relu(-1.0 * pred_fake_B))
+            loss_adv_G_A2B = torch.mean(F.relu(-1.0 * pred_fake_B))
             fake_A = self.G_B2A(real_B)
             pred_fake_A = self.D_A(torch.narrow(fake_A, 2, 16, 128))
-            loss_GAN_B2A = torch.mean(F.relu(-1.0 * pred_fake_A))
+            loss_adv_G_B2A = torch.mean(F.relu(-1.0 * pred_fake_A))
 
             # cycle consistency losses: L1 loss (from Scyclone paper eq.1)
             cycled_A = self.G_B2A(fake_B)
@@ -90,8 +87,8 @@ class Scyclone(pl.LightningModule):
 
             # Total loss
             loss_G = (
-                loss_GAN_A2B
-                + loss_GAN_B2A
+                loss_adv_G_A2B
+                + loss_adv_G_B2A
                 + loss_cycle_ABA * self.hparams["weight_cycle"]
                 + loss_cycle_BAB * self.hparams["weight_cycle"]
                 + loss_identity_A * self.hparams["weight_identity"]
@@ -100,8 +97,8 @@ class Scyclone(pl.LightningModule):
 
             log = {
                 "Loss/G_total": loss_G,
-                "Loss/Adv/G_B2A": loss_GAN_B2A,
-                "Loss/Adv/G_A2B": loss_GAN_A2B,
+                "Loss/Adv/G_B2A": loss_adv_G_B2A,
+                "Loss/Adv/G_A2B": loss_adv_G_A2B,
                 "Loss/Cyc/A2B2A": loss_cycle_ABA * self.hparams["weight_cycle"],
                 "Loss/Cyc/B2A2B": loss_cycle_BAB * self.hparams["weight_cycle"],
                 "Loss/Id/A2A": loss_identity_A * self.hparams["weight_identity"],
@@ -165,6 +162,7 @@ class Scyclone(pl.LightningModule):
         real_A, real_B = batch
         fake_B = self.G_A2B(real_A)
         fake_A = self.G_B2A(real_B)
+        # ReLU for preventing minus value for GriffinLim
         fake_B_wave = self.griffinLim(F.relu(fake_B))
         fake_A_wave = self.griffinLim(F.relu(fake_A))
         return {

@@ -32,7 +32,7 @@ pip install git+https://github.com/tarepan/Scyclone-PyTorch
 ```bash
 python -m scyclonepytorch.Scyclone_main
 ```
-For arguments, please check `scyclonepytorch/Scyclone_main.py` 
+For arguments, please check `./scyclonepytorch/args.py` 
 
 ## Current repo status
 Model and training is totally same with original paper.  

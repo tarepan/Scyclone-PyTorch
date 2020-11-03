@@ -1,6 +1,6 @@
 from typing import Tuple
 import itertools
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 
 import torch
 from torch.nn import functional as F
@@ -11,12 +11,14 @@ import pytorch_lightning as pl
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.profiler import AdvancedProfiler
+from pytorch_lightning.core.datamodule import LightningDataModule
 
 # currently there is no stub in npvcc2016
 from torchaudio.transforms import GriffinLim  # type: ignore
 
 from .datamodule import DataLoaderPerformance, NonParallelSpecDataModule
 from .modules import Generator, Discriminator
+from .args import parseArgments
 
 
 # G: Generator
@@ -166,7 +168,7 @@ class Scyclone(pl.LightningModule):
         fake_B_wave = self.griffinLim(F.relu(fake_B))
         fake_A_wave = self.griffinLim(F.relu(fake_A))
 
-        self.log('val_loss', o_D["loss"])
+        self.log("val_loss", o_D["loss"])
         return {
             "val_loss": o_D["loss"],
             "wave": {"Validation/A2B": fake_B_wave, "Validation/B2A": fake_A_wave},
@@ -231,31 +233,10 @@ class Scyclone(pl.LightningModule):
         return [optim_G, optim_D], [sched_G, sched_D]
 
 
-def cli_main():
-
-    pl.seed_everything(1234)
-
-    # args
-    parser = ArgumentParser()
-    parser.add_argument("--dir_exp", default=None, type=str)
-    parser.add_argument("--checkpoint", default=None, type=str)
-    parser.add_argument("--weights_save_path", default=None, type=str)
-    parser.add_argument("--no_amp", action="store_true")
-    parser.add_argument("--num_workers", default=2, type=int)
-    parser.add_argument("--no_pin_memory", action="store_true")
-    parser.add_argument("--profiler", action="store_true")
-    # max: from Scyclone poster (check my Scyclone summary blog post)
-    parser.add_argument("--max_epochs", default=400000, type=int)
-    # optional... automatically add all the params
-    # parser = pl.Trainer.add_argparse_args(parser)
-    # parser = MNISTDataModule.add_argparse_args(parser)
-    parser.add_argument("--noiseless_d", action="store_true")
-    args = parser.parse_args()
+def train(args_scpt: Namespace, datamodule: LightningDataModule) -> None:
     # setup
     gpus: int = 1 if torch.cuda.is_available() else 0  # single GPU or CPU
-    model = Scyclone(args.noiseless_d)
-    loader_perf = DataLoaderPerformance(args.num_workers, not args.no_pin_memory)
-    datamodule = NonParallelSpecDataModule(64, loader_perf)
+    model = Scyclone(args_scpt.noiseless_d)
     # Save at `{default_root_dir}/default/version_{n}/checkpoints/last.ckpt`
     ckpt_cb = ModelCheckpoint(
         period=60, save_last=True, save_top_k=1, monitor="val_loss"
@@ -263,25 +244,42 @@ def cli_main():
     trainer = pl.Trainer(
         gpus=gpus,
         auto_select_gpus=True,
-        precision=32 if args.no_amp else 16,  # default AMP
-        max_epochs=args.max_epochs,
+        precision=32 if args_scpt.no_amp else 16,  # default AMP
+        max_epochs=args_scpt.max_epochs,
         check_val_every_n_epoch=1500,  # about 1 validation per 10 min
         # load/resume
-        resume_from_checkpoint=args.checkpoint,
+        resume_from_checkpoint=args_scpt.checkpoint,
         # save
-        default_root_dir=args.dir_exp,
-        weights_save_path=args.weights_save_path,
+        default_root_dir=args_scpt.dir_exp,
+        weights_save_path=args_scpt.weights_save_path,
         checkpoint_callback=ckpt_cb,
-        logger=pl_loggers.TensorBoardLogger(args.dir_exp if args.dir_exp else "logs/"),
+        logger=pl_loggers.TensorBoardLogger(
+            args_scpt.dir_exp if args_scpt.dir_exp else "logs/"
+        ),
         # reload_dataloaders_every_epoch=True,
-        profiler=AdvancedProfiler() if args.profiler else None,
+        profiler=AdvancedProfiler() if args_scpt.profiler else None,
     )
 
     # training
     trainer.fit(model, datamodule=datamodule)
 
-    # testing
-    # trainer.test(datamodule=datamodule)
+
+def cli_main():
+
+    pl.seed_everything(1234)
+
+    # args
+    parser = ArgumentParser()
+    args_scpt = parseArgments(parser)  # args of Scyclone-Pytorch
+
+    # datamodule
+    loader_perf = DataLoaderPerformance(
+        args_scpt.num_workers, not args_scpt.no_pin_memory
+    )
+    datamodule = NonParallelSpecDataModule(64, loader_perf)
+
+    # train
+    train(args_scpt, datamodule)
 
 
 if __name__ == "__main__":  # pragma: no cover

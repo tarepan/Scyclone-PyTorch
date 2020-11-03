@@ -16,7 +16,7 @@ Reimplmentation of voice conversion system "Scyclone" with PyTorch.
 - [Dependency Notes](#dependency-notes)
 
 ## Demo
-Link super great impressive high-quatity audio demo.
+ToDO: Link super great impressive high-quatity audio demo.
 
 ## How to Use
 ### Quick training <!-- omit in toc -->

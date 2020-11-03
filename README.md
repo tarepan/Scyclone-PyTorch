@@ -35,7 +35,7 @@ python -m scyclonepytorch.Scyclone_main
 For arguments, please check `./scyclonepytorch/args.py` 
 
 ## Current repo status
-Model and training is totally same with original paper.  
+Spec2Spec Model and training is totally same with original paper (no WaveRNN Vocoder, using Griffin-Lim).  
 I trained with small dataset (only 64/64 utterances), but it do not work well.  
 Original paper use over 4000/4000 utterances, so using big dataset will be needed.  
 Training itself is very fast (within few days), I encollege **you** to try training with you dataset!!  

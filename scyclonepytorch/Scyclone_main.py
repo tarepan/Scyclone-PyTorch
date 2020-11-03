@@ -165,6 +165,8 @@ class Scyclone(pl.LightningModule):
         # ReLU for preventing minus value for GriffinLim
         fake_B_wave = self.griffinLim(F.relu(fake_B))
         fake_A_wave = self.griffinLim(F.relu(fake_A))
+
+        self.log('val_loss', o_D["loss"])
         return {
             "val_loss": o_D["loss"],
             "wave": {"Validation/A2B": fake_B_wave, "Validation/B2A": fake_A_wave},

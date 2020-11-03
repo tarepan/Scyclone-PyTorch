@@ -23,8 +23,6 @@ Link super great impressive high-quatity audio demo.
 Jump to **[Notebook in Google Colaboratory][notebook]**, then Run. that's all!!  
 
 ## Install
-(If your machine needs specific PyTorch version (e.g. old CUDA compatible version), install it before Scyclone installation.)  
-
 ```bash
 pip install git+https://github.com/tarepan/Scyclone-PyTorch
 ```

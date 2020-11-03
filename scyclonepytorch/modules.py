@@ -5,7 +5,7 @@ import torch.nn as nn
 
 
 class ResidualBlock_G(nn.Module):
-    def __init__(self, C: int, lr: float):
+    def __init__(self, C: int, slope: float):
         super().__init__()
 
         # params
@@ -15,7 +15,7 @@ class ResidualBlock_G(nn.Module):
         # blocks
         self.conv_block = nn.Sequential(
             nn.Conv1d(C, C, kernel, padding=kernel // 2),
-            nn.LeakyReLU(lr),
+            nn.LeakyReLU(slope),
             nn.Conv1d(C, C, kernel, padding=kernel // 2),
         )
 
@@ -36,20 +36,20 @@ class Generator(nn.Module):
         n_C_trunk: int = 256
         ## "In this study, we set nG and nD to 7 and 6, respectively" from Scyclone paper
         n_ResBlock_G: int = 7
-        lr: float = 0.01
+        slope: float = 0.01
 
         # channel adjustment with pointwiseConv
         ## "We used leaky rectified linear units" from Scyclone paper
         blocks: List[nn.Module] = [
             nn.Conv1d(n_C_freq, n_C_trunk, 1),
-            nn.LeakyReLU(lr),
+            nn.LeakyReLU(slope),
         ]
         # Residual blocks
-        blocks += [ResidualBlock_G(n_C_trunk, lr) for _ in range(n_ResBlock_G)]
+        blocks += [ResidualBlock_G(n_C_trunk, slope) for _ in range(n_ResBlock_G)]
         # channel adjustment with pointwiseConv
         blocks += [
             nn.Conv1d(n_C_trunk, n_C_freq, 1),
-            nn.LeakyReLU(lr),
+            nn.LeakyReLU(slope),
         ]
 
         # block registration (`*` is array unpack)
@@ -60,7 +60,7 @@ class Generator(nn.Module):
 
 
 class ResidualSNBlock_D(nn.Module):
-    def __init__(self, C: int, lr: float):
+    def __init__(self, C: int, slope: float):
         super().__init__()
 
         # params
@@ -70,7 +70,7 @@ class ResidualSNBlock_D(nn.Module):
         # blocks
         self.conv_blocks = nn.Sequential(
             nn.utils.spectral_norm(nn.Conv1d(C, C, kernel, padding=kernel // 2)),
-            nn.LeakyReLU(lr),
+            nn.LeakyReLU(slope),
             nn.utils.spectral_norm(nn.Conv1d(C, C, kernel, padding=kernel // 2)),
         )
 
@@ -94,7 +94,7 @@ class Discriminator(nn.Module):
         n_C_trunk: int = 256
         ## "In this study, we set nG and nD to 7 and 6, respectively" from Scyclone paper
         n_ResBlock_D: int = 6
-        lr: float = 0.2
+        slope: float = 0.2
 
         self._noise_sigma = noise_sigma
         self._device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -102,16 +102,16 @@ class Discriminator(nn.Module):
         ## "We used leaky rectified linear units" from Scyclone paper
         blocks: List[nn.Module] = [
             nn.utils.spectral_norm(nn.Conv1d(n_C_freq, n_C_trunk, 1)),
-            nn.LeakyReLU(lr),
+            nn.LeakyReLU(slope),
         ]
 
         # Residual blocks
-        blocks += [ResidualSNBlock_D(n_C_trunk, lr) for _ in range(n_ResBlock_D)]
+        blocks += [ResidualSNBlock_D(n_C_trunk, slope) for _ in range(n_ResBlock_D)]
 
         # final compression
         blocks += [
             nn.utils.spectral_norm(nn.Conv1d(n_C_trunk, 1, 1)),
-            nn.LeakyReLU(lr),
+            nn.LeakyReLU(slope),
             nn.AdaptiveAvgPool1d(1),
         ]
 

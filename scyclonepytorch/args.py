@@ -1,7 +1,12 @@
 from argparse import ArgumentParser, Namespace
+from typing import List, Optional
 
 
-def parseArgments(parser: ArgumentParser) -> Namespace:
+def parseArgments(parser: ArgumentParser, input: Optional[List[str]]) -> Namespace:
+    """
+    Parse Scyclone-PyTorch arguments
+    """
+
     parser.add_argument("--dir_exp", default=None, type=str)
     parser.add_argument("--checkpoint", default=None, type=str)
     parser.add_argument("--weights_save_path", default=None, type=str)
@@ -15,4 +20,5 @@ def parseArgments(parser: ArgumentParser) -> Namespace:
     # parser = pl.Trainer.add_argparse_args(parser)
     # parser = MNISTDataModule.add_argparse_args(parser)
     parser.add_argument("--noiseless_d", action="store_true")
-    return parser.parse_args()
+
+    return parser.parse_args() if input is None else parser.parse_args(input)

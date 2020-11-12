@@ -9,9 +9,8 @@ repository = "https://github.com/tarepan/Scyclone-PyTorch"
 [tool.poetry.dependencies]
 python = "^3.6.1"
 torch = "*"
-torchaudio = "^0.7.0"
 npvcc2016 = "^1.1.0"
-torchaudio = "^0.6.0"
+torchaudio = "^0.7.0"
 pytorch-lightning = "1.0.4"
 
 [tool.poetry.dev-dependencies]

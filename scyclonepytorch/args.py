@@ -2,7 +2,9 @@ from argparse import ArgumentParser, Namespace
 from typing import List, Optional
 
 
-def parseArgments(parser: ArgumentParser, input: Optional[List[str]]) -> Namespace:
+def parseArgments(
+    parser: ArgumentParser, input: Optional[List[str]] = None
+) -> Namespace:
     """
     Parse Scyclone-PyTorch arguments
     """

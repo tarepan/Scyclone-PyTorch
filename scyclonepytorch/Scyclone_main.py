@@ -1,4 +1,5 @@
-from typing import Tuple
+import os
+from typing import Optional, Tuple, NamedTuple, Union
 import itertools
 from argparse import ArgumentParser, Namespace
 
@@ -234,10 +235,13 @@ class Scyclone(pl.LightningModule):
 
 
 def train(args_scpt: Namespace, datamodule: LightningDataModule) -> None:
+
+    ckptAndLogging = CheckpointAndLogging(
+        args_scpt.dir_root, args_scpt.name_exp, args_scpt.name_version
+    )
     # setup
     gpus: int = 1 if torch.cuda.is_available() else 0  # single GPU or CPU
     model = Scyclone(args_scpt.noiseless_d)
-    # Save at `{default_root_dir}/default/version_{n}/checkpoints/last.ckpt`
     ckpt_cb = ModelCheckpoint(
         period=60, save_last=True, save_top_k=1, monitor="val_loss"
     )
@@ -247,14 +251,12 @@ def train(args_scpt: Namespace, datamodule: LightningDataModule) -> None:
         precision=32 if args_scpt.no_amp else 16,  # default AMP
         max_epochs=args_scpt.max_epochs,
         check_val_every_n_epoch=1500,  # about 1 validation per 10 min
-        # load/resume
-        resume_from_checkpoint=args_scpt.checkpoint,
-        # save
-        default_root_dir=args_scpt.dir_exp,
-        weights_save_path=args_scpt.weights_save_path,
+        # logging/checkpointing
+        resume_from_checkpoint=ckptAndLogging.resume_from_checkpoint,
+        default_root_dir=ckptAndLogging.default_root_dir,
         checkpoint_callback=ckpt_cb,
         logger=pl_loggers.TensorBoardLogger(
-            args_scpt.dir_exp if args_scpt.dir_exp else "logs/"
+            ckptAndLogging.save_dir, ckptAndLogging.name, ckptAndLogging.version
         ),
         # reload_dataloaders_every_epoch=True,
         profiler=AdvancedProfiler() if args_scpt.profiler else None,
@@ -262,6 +264,47 @@ def train(args_scpt: Namespace, datamodule: LightningDataModule) -> None:
 
     # training
     trainer.fit(model, datamodule=datamodule)
+
+
+class CheckpointAndLogging:
+    """
+    Generate checkpoint & logging pathes.
+    {dir_root}/
+        {name_exp}/
+            {name_version}/
+                checkpoints/
+                    {name_ckpt} # PyTorch-Lightning Checkpoint. Resume from here.
+                hparams.yaml
+                events.out.tfevents.{xxxxyyyyzzzz} # TensorBoard log file.
+    """
+
+    # [PL's Trainer](https://pytorch-lightning.readthedocs.io/en/stable/trainer.html#trainer-class-api)
+    default_root_dir: Optional[str]
+    resume_from_checkpoint: Optional[str]
+    # [PL's TensorBoardLogger](https://pytorch-lightning.readthedocs.io/en/stable/logging.html#tensorboard)
+    save_dir: str
+    name: str
+    version: str
+    # [PL's ModelCheckpoint callback](https://pytorch-lightning.readthedocs.io/en/stable/generated/pytorch_lightning.callbacks.ModelCheckpoint.html#pytorch_lightning.callbacks.ModelCheckpoint)
+    # inferred from above two
+
+    def __init__(
+        self,
+        dir_root: str,
+        name_exp: str = "default",
+        name_version: str = "version_-1",
+        name_ckpt: str = "last.ckpt",
+    ) -> None:
+
+        # ModelCheckpoint
+        self.default_root_dir = dir_root
+        self.resume_from_checkpoint = os.path.join(
+            dir_root, name_exp, name_version, "checkpoints", name_ckpt
+        )
+        # TensorBoardLogger
+        self.save_dir = dir_root
+        self.name = name_exp
+        self.version = name_version
 
 
 def cli_main():

@@ -2,7 +2,7 @@ name: Register Docker image to Amazon ECR
 on:
   push:
     branches:
-      - master
+      - main
 jobs:
   deploy:
     name: CI/CD

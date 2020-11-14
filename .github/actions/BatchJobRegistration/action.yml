@@ -1,0 +1,12 @@
+name: "Batch JobDef Templating and Registration"
+description: "Template and Register Amazon Batch job definition"
+inputs:
+  adress-container:
+    description: "The ECR adress of container"
+    required: true
+  path-task-definition:
+    description: "The path to the Batch job definition JSON file"
+    required: true
+runs:
+  using: "node12"
+  main: "./index.js"

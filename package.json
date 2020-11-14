@@ -1,0 +1,10 @@
+{
+    "name": "aws-actions-amazon-batch-deploy-task-definition",
+    "version": "1.0.0",
+    "description": "Registers an Amazon Batch job definition with templating.",
+    "main": "index.js",
+    "dependencies": {
+      "@actions/core": "^1.2.6",
+      "aws-sdk": "^2.788.0"
+    }
+  }

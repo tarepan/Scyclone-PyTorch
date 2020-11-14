@@ -1,0 +1,26 @@
+{
+    "jobDefinitionName": "Scyclone-PyTorch",
+    "type": "container",
+    "containerProperties": {
+        "image": "my_ECR_url",
+        "vcpus": 4,
+        "memory": 15000,
+        "command": [
+            "--num_workers=0", "--dir_root=s3://tarepan-machine-learning/Scyclone-PyTorch", "--name_version=version_-1"
+        ],
+        "jobRoleArn": "arn:aws:iam::516292881072:role/Container-ML",
+        "executionRoleArn": "arn:aws:iam::516292881072:role/AmazonECSTaskExecutionWithCWLogsRole",
+        "resourceRequirements": [
+            {
+                "type": "GPU",
+                "value": "1"
+            }
+        ]
+    },
+    "retryStrategy": {
+        "attempts": 10
+    },
+    "tags": {
+        "KeyName": "machine-learning"
+    }
+}

@@ -1,0 +1,48 @@
+name: Register Docker image to Amazon ECR
+on:
+  push:
+    branches:
+      - master
+jobs:
+  deploy:
+    name: CI/CD
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Login to Amazon ECR with Docker
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Build images and push them to ECR with dockerd
+          # main
+          docker build -t $ECR_REGISTRY/machineLearning/Scyclone/main:$IMAGE_TAG -f training.Dockerfile .
+          docker push $ECR_REGISTRY/machineLearning/Scyclone/main:$IMAGE_TAG
+          echo "::set-output name=image_adress::$ECR_REGISTRY/machineLearning/Scyclone/main:$IMAGE_TAG"
+
+      - name: Build actions
+        id: build-action
+        run: |
+          npm ci
+
+      - name: Template and Register AWS Batch job definition from base template
+        id: generate-job-def
+        uses: ./.github/actions/BatchJobRegistration
+        with:
+          path-task-definition: ./.github/actions/BatchJobRegistration/training_AWS_Batch_job_def.json
+          adress-container: ${{ steps.build-image.outputs.image_adress }}

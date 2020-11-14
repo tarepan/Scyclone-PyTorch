@@ -12,9 +12,10 @@ async function run() {
         const adressContainer = core.getInput("adress-container", { required: true });
 
         // Parse the task definition
+        const root = process.env.GITHUB_WORKSPACE ? process.env.GITHUB_WORKSPACE : ""; // for Node12
         const jobDefPath = path.isAbsolute(pathJobDefInput)
             ? pathJobDefInput
-            : path.join(process.env.GITHUB_WORKSPACE ?? "", pathJobDefInput);
+            : path.join(root, pathJobDefInput);
         if (!fs.existsSync(jobDefPath)) {
             throw new Error(`Task definition file does not exist: ${pathJobDefInput}`);
         }

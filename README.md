@@ -40,7 +40,10 @@ I trained with small dataset (only 64/64 utterances), but it do not work well.
 Original paper use over 4000/4000 utterances, so using big dataset will be needed.  
 Training itself is very fast (within few days), I encollege **you** to try training with you dataset!!  
 I am grad if you share the result. Wait in repository issue!!  
- 
+
+### Training Speed <!-- omit in toc -->
+3.37 [iter/sec] @ NVIDIA T4 Google Colaboratory (AMP+)
+
 ## Original paper
 [![Paper](http://img.shields.io/badge/paper-arxiv.2005.03334-B31B1B.svg)][paper]  
 <!-- https://arxiv2bibtex.org/?q=2005.03334&format=bibtex -->

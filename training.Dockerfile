@@ -14,6 +14,10 @@ RUN apt-get update && apt-get install -y git
 
 RUN pip install git+https://github.com/tarepan/Scyclone-PyTorch
 
+# For Torch==1.6.0
+RUN pip uninstall -y torchaudio
+RUN pip install torchaudio==0.6.0
+
 # temporal, for not-yet-existing checkpoint feature
 RUN pip uninstall -y "pytorch-lightning"
 RUN pip install "git+https://github.com/PyTorchLightning/pytorch-lightning.git@refs/pull/4402/head"

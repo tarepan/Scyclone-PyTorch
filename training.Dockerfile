@@ -8,7 +8,6 @@ FROM pytorch/pytorch:1.6.0-cuda10.1-cudnn7-runtime
 # For pip install through git
 RUN apt-get update && apt-get install -y git
 
-RUN pip install s3fs
 # latest s3fs needs Python=>3.7, so old verisons are needed for Python==3.6
 # RUN pip install s3fs==0.4.2
 # RUN pip install "fsspec[http, s3]==0.8.1"

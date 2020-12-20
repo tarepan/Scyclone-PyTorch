@@ -24,18 +24,20 @@ class NonParallelSpecDataModule(LightningDataModule):
         self,
         batch_size: int = 64,
         performance: DataLoaderPerformance = DataLoaderPerformance(4, True),
+        zipfs: bool = False
     ):
         super().__init__()
         self.batch_size = batch_size
         self._num_worker = performance.num_workers
         self._pin_memory = performance.pin_memory
+        self._zipfs = zipfs
 
     def prepare_data(self, *args, **kwargs) -> None:
-        NonParallelSpecDataset(train=True)
+        NonParallelSpecDataset(train=True, zipfs=self._zipfs)
 
     def setup(self, stage=None):
         if stage == "fit" or stage is None:
-            dataset_full = NonParallelSpecDataset(train=True)
+            dataset_full = NonParallelSpecDataset(train=True, zipfs=self._zipfs)
             # use modulo for validation (#training become batch*N)
             n_full = len(dataset_full)
             mod = n_full % self.batch_size
@@ -44,7 +46,7 @@ class NonParallelSpecDataModule(LightningDataModule):
             )
             self.batch_size_val = mod
         if stage == "test" or stage is None:
-            self.dataset_test = NonParallelSpecDataset(train=False)
+            self.dataset_test = NonParallelSpecDataset(train=False, zipfs=self._zipfs)
             self.batch_size_test = self.batch_size
 
     def train_dataloader(self):
@@ -103,9 +105,9 @@ def pad_clip(d: Tensor) -> Tensor:
 
 
 class NonParallelSpecDataset(Dataset):
-    def __init__(self, train: bool):
-        self.datasetA = NpVCC2016_spec(".", train, True, ["SF1"], pad_clip, True)
-        self.datasetB = NpVCC2016_spec(".", train, True, ["TF2"], pad_clip, True)
+    def __init__(self, train: bool, zipfs: bool):
+        self.datasetA = NpVCC2016_spec(train, ["SF1"], pad_clip, True, zipfs=zipfs, compression=False)
+        self.datasetB = NpVCC2016_spec(train, ["TF2"], pad_clip, True, zipfs=zipfs, compression=False)
 
     def __getitem__(self, n: int):
         """Load the n-th sample from the dataset.

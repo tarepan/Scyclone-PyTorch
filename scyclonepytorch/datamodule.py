@@ -1,4 +1,4 @@
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 import torch
 from torch.tensor import Tensor
 from torch.utils.data import Dataset
@@ -7,7 +7,8 @@ from pytorch_lightning import LightningDataModule
 
 # currently there is no stub in npvcc2016
 from npvcc2016.PyTorch.dataset.spectrogram import NpVCC2016_spec  # type: ignore
-
+from jsut.PyTorch.dataset.spectrogram import JSUT_spec
+from jsss.PyTorch.dataset.spectrogram import JSSS_spec
 
 class DataLoaderPerformance(NamedTuple):
     """
@@ -30,14 +31,13 @@ class NonParallelSpecDataModule(LightningDataModule):
         self.batch_size = batch_size
         self._num_worker = performance.num_workers
         self._pin_memory = performance.pin_memory
-        self._zipfs = zipfs
 
     def prepare_data(self, *args, **kwargs) -> None:
-        NonParallelSpecDataset(train=True, zipfs=self._zipfs)
+        NonParallelSpecBigDataset(train=True)
 
-    def setup(self, stage=None):
+    def setup(self, stage: Optional[str] = None):
         if stage == "fit" or stage is None:
-            dataset_full = NonParallelSpecDataset(train=True, zipfs=self._zipfs)
+            dataset_full = NonParallelSpecBigDataset(train=True)
             # use modulo for validation (#training become batch*N)
             n_full = len(dataset_full)
             mod = n_full % self.batch_size
@@ -46,7 +46,7 @@ class NonParallelSpecDataModule(LightningDataModule):
             )
             self.batch_size_val = mod
         if stage == "test" or stage is None:
-            self.dataset_test = NonParallelSpecDataset(train=False, zipfs=self._zipfs)
+            self.dataset_test = NonParallelSpecBigDataset(train=False)
             self.batch_size_test = self.batch_size
 
     def train_dataloader(self):
@@ -123,6 +123,43 @@ class NonParallelSpecDataset(Dataset):
     def __len__(self) -> int:
         return min(len(self.datasetA), len(self.datasetB))
 
+
+class NonParallelSpecBigDataset(Dataset):
+    def __init__(self, train: bool):
+
+        resampled_sr = 16000
+        if train:
+            subtypes_a = ["basic5000"]
+            subtypes_b = ["short-form/basic5000"]
+        else:
+            subtypes_a = ["voiceactress100"]
+            subtypes_b = ["short-form/voiceactress100"]
+
+        self.datasetA = JSUT_spec(train, download_corpus=True, transform=pad_clip, subtypes=subtypes_a,
+            # corpus_adress=,
+            # dataset_adress=,
+            resample_sr=resampled_sr
+        )
+        self.datasetB = JSSS_spec(train, download_corpus=True, transform=pad_clip, subtypes=subtypes_b,
+            # corpus_adress=,
+            # dataset_adress=,
+            resample_sr=resampled_sr
+        )
+
+    def __getitem__(self, n: int):
+        """Load the n-th sample from the dataset.
+
+        Potential problem: A/B pair
+        Current implementation yield fixed A/B pair.
+        When batch size is small (e.g. 1), Batch_A and Batch_B has strong correlation.
+        If big batch, correlation decrease so little problem.
+        We could solve this problem through sampler (e.g. sampler + sampler reset).
+        """
+        # ignore label
+        return (self.datasetA[n][0], self.datasetB[n][0])
+
+    def __len__(self) -> int:
+        return min(len(self.datasetA), len(self.datasetB))
 
 if __name__ == "__main__":
     # test for clip

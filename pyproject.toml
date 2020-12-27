@@ -14,6 +14,8 @@ pytorch-lightning = "1.0.6"
 fsspec = {extras = ["http", "s3"], version = "^0.8.4"}
 boto3 = "^1.16.18"
 npvcc2016 = "^2.0.1"
+jsss = {git = "https://github.com/tarepan/jsss.git", rev = "main"}
+jsut = {git = "https://github.com/tarepan/jsut.git", rev = "main"}
 
 [tool.poetry.dev-dependencies]
 

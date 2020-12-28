@@ -24,9 +24,9 @@ def train(args: Namespace, datamodule: LightningDataModule) -> None:
     trainer = pl.Trainer(
         gpus=gpus,
         auto_select_gpus=True,
-        precision=32 if args.no_amp else 16,  # default AMP
+        precision=32 if args.no_amp else 16,
         max_epochs=args.max_epochs,
-        check_val_every_n_epoch=1500,  # about 1 validation per 10 min
+        check_val_every_n_epoch=args.val_interval_epoch,
         # logging/checkpointing
         resume_from_checkpoint=ckptAndLogging.resume_from_checkpoint,
         default_root_dir=ckptAndLogging.default_root_dir,

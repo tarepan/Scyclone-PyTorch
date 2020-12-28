@@ -30,7 +30,7 @@ pip install git+https://github.com/tarepan/Scyclone-PyTorch
 
 ### Training <!-- omit in toc -->
 ```bash
-python -m scyclonepytorch.Scyclone_main
+python -m scyclonepytorch.main_train
 ```
 For arguments, please check `./scyclonepytorch/args.py` 
 

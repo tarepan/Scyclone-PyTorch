@@ -22,6 +22,6 @@ RUN pip install torchaudio==0.6.0
 RUN pip uninstall -y "pytorch-lightning"
 RUN pip install "git+https://github.com/PyTorchLightning/pytorch-lightning.git@refs/pull/4402/head"
 
-ENTRYPOINT ["python", "-m", "scyclonepytorch.Scyclone_main"]
+ENTRYPOINT ["python", "-m", "scyclonepytorch.main_train"]
 # use `CMD` override for arguments.
 #   c.f. [Understand how CMD and ENTRYPOINT interact](https://docs.docker.com/engine/reference/builder/#understand-how-cmd-and-entrypoint-interact)

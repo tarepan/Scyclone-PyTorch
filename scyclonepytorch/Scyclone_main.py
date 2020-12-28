@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Tuple, NamedTuple, Union
+from typing import Optional, Tuple
 import itertools
 from argparse import ArgumentParser, Namespace
 
@@ -14,35 +14,34 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.profiler import AdvancedProfiler
 from pytorch_lightning.core.datamodule import LightningDataModule
 
-# currently there is no stub in npvcc2016
-from torchaudio.transforms import GriffinLim  # type: ignore
+from torchaudio.transforms import GriffinLim
 
 from .datamodule import DataLoaderPerformance, NonParallelSpecDataModule
 from .modules import Generator, Discriminator
 from .args import parseArgments
 
 
-# G: Generator
-# D: Discriminator
-# X2Y: map X to Y (e.g. B2A)
+# ## Glossary
+# - G: Generator
+# - D: Discriminator
+# - X2Y: map X to Y (e.g. B2A)
 
 
 class Scyclone(pl.LightningModule):
-    """
-    Scyclone, non-parallel voice conversion model.
-    Origin: Masaya Tanaka, et al.. (2020). Scyclone: High-Quality and Parallel-Data-Free Voice Conversion Using Spectrogram and Cycle-Consistent Adversarial Networks. Arxiv 2005.03334.
+    """Scyclone, non-parallel voice conversion model.
     """
 
     def __init__(self, noiseless_D: bool = False):
+
         super().__init__()
 
         # params
         self.hparams = {
-            ## "λcy and λid were set to 10 and 1 in Eq. 1" in Scyclone paper
-            ## self.weight_adv = 1 ## standard
+            # "λcy and λid were set to 10 and 1 in Eq. 1" in Scyclone paper
+            # self.weight_adv = 1 # standard
             "weight_cycle": 10,
             "weight_identity": 1,
-            ## "m is a parameter of the hinge loss and is set to (...) 0.5 in our experiments" in Scyclone paper
+            # "m is a parameter of the hinge loss and is set to (...) 0.5 in our experiments" in Scyclone paper
             "hinge_offset_D": 0.5,
             "learning_rate": 2.0 * 1e-4,
         }
@@ -56,14 +55,13 @@ class Scyclone(pl.LightningModule):
         self.griffinLim = GriffinLim(n_fft=254, n_iter=256)
 
     def forward(self, x: Tensor) -> Tensor:
+
         return self.G_A2B(x)
 
-    def training_step(
-        self, batch: Tuple[Tensor, Tensor], batch_idx: int, optimizer_idx: int
-    ):
+    def training_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int, optimizer_idx: int):
+        """Min-Max adversarial training (G:D = 1:1)
         """
-        Min-Max adversarial training (G:D = 1:1)
-        """
+
         real_A, real_B = batch
 
         # Generator training
@@ -152,12 +150,14 @@ class Scyclone(pl.LightningModule):
         return out
 
     def training_step_end(self, out):
+
         # logging
         for name, value in out["log_losses"].items():
             self.log(name, value, on_step=False, on_epoch=True)
         return out
 
     def validation_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int):
+
         # loss calculation
         o_G = self.training_step(batch, batch_idx, 0)
         o_D = self.training_step(batch, batch_idx, 1)
@@ -177,6 +177,7 @@ class Scyclone(pl.LightningModule):
         }
 
     def validation_step_end(self, out) -> None:
+        
         # waveform logging
         for i in range(0, 2):
             a2b = out["wave"]["Validation/A2B"][i]
@@ -208,9 +209,9 @@ class Scyclone(pl.LightningModule):
         pass
 
     def configure_optimizers(self):
+        """Set up G/D optimizers
         """
-        return G/D optimizers
-        """
+
         decay_rate = 0.1
         decay_iter = 100000
         optim_G = Adam(

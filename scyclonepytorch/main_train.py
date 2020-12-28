@@ -1,16 +1,18 @@
 from argparse import ArgumentParser
 
-import pytorch_lightning as pl
+import pytorch_lightning
 
-from .train import train
-from .datamodule import DataLoaderPerformance, NonParallelSpecDataModule
 from .args import parseArgments
+from .datamodule import DataLoaderPerformance, NonParallelSpecDataModule
+from .train import train
 
 
 def main_train():
+    """Train Scyclone-PyTorch with cli arguments and the default dataset.
+    """
 
     # Random seed
-    pl.seed_everything(1234)
+    pytorch_lightning.seed_everything(1234)
 
     # Args
     parser = ArgumentParser()

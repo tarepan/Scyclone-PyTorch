@@ -36,6 +36,7 @@ def train(args: Namespace, datamodule: LightningDataModule) -> None:
         ),
         # reload_dataloaders_every_epoch=True,
         profiler=AdvancedProfiler() if args.profiler else None,
+        progress_bar_refresh_rate=30
     )
 
     # training

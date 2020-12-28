@@ -319,7 +319,7 @@ def cli_main():
     loader_perf = DataLoaderPerformance(
         args_scpt.num_workers, not args_scpt.no_pin_memory
     )
-    datamodule = NonParallelSpecDataModule(64, loader_perf, zipfs=args_scpt.zipfs)
+    datamodule = NonParallelSpecDataModule(64, loader_perf)
 
     # train
     train(args_scpt, datamodule)

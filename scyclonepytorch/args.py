@@ -21,7 +21,5 @@ def parseArgments(
     parser.add_argument("--num_workers", default=2, type=int)
     parser.add_argument("--no_pin_memory", action="store_true")
     parser.add_argument("--profiler", action="store_true")
-    # Dataset
-    parser.add_argument("--zipfs", action="store_true")
 
     return parser.parse_args() if input is None else parser.parse_args(input)

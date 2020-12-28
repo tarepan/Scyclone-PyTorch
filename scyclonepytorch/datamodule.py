@@ -25,7 +25,6 @@ class NonParallelSpecDataModule(LightningDataModule):
         self,
         batch_size: int = 64,
         performance: DataLoaderPerformance = DataLoaderPerformance(4, True),
-        zipfs: bool = False
     ):
         super().__init__()
         self.batch_size = batch_size
@@ -105,9 +104,9 @@ def pad_clip(d: Tensor) -> Tensor:
 
 
 class NonParallelSpecDataset(Dataset):
-    def __init__(self, train: bool, zipfs: bool):
-        self.datasetA = NpVCC2016_spec(train, ["SF1"], pad_clip, True, zipfs=zipfs, compression=False)
-        self.datasetB = NpVCC2016_spec(train, ["TF2"], pad_clip, True, zipfs=zipfs, compression=False)
+    def __init__(self, train: bool):
+        self.datasetA = NpVCC2016_spec(train, ["SF1"], pad_clip, True)
+        self.datasetB = NpVCC2016_spec(train, ["TF2"], pad_clip, True)
 
     def __getitem__(self, n: int):
         """Load the n-th sample from the dataset.

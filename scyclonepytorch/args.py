@@ -16,6 +16,7 @@ def parseArgments(
     # max: from Scyclone poster (check my Scyclone summary blog post)
     parser.add_argument("--max_epochs", default=400000, type=int)
     parser.add_argument("--noiseless_d", action="store_true")
+    parser.add_argument("--sampling_rate", default=16000, type=int)
     parser.add_argument("--no_amp", action="store_true")
     # DataLoaderPerformance
     parser.add_argument("--num_workers", default=2, type=int)

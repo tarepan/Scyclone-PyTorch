@@ -19,7 +19,7 @@ def train(args: Namespace, datamodule: LightningDataModule) -> None:
     ckptAndLogging = CheckpointAndLogging(args.dir_root, args.name_exp, args.name_version)
     # setup
     gpus: int = 1 if torch.cuda.is_available() else 0  # single GPU or CPU
-    model = Scyclone(args.noiseless_d)
+    model = Scyclone(args.sampling_rate, args.noiseless_d)
     ckpt_cb = ModelCheckpoint(period=60, save_last=True, save_top_k=1, monitor="val_loss")
     trainer = pl.Trainer(
         gpus=gpus,

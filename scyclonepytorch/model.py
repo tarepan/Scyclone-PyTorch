@@ -22,7 +22,7 @@ class Scyclone(pl.LightningModule):
     """Scyclone, non-parallel voice conversion model.
     """
 
-    def __init__(self, noiseless_D: bool = False):
+    def __init__(self, sampling_rate: int, noiseless_D: bool = False):
 
         super().__init__()
 
@@ -35,6 +35,7 @@ class Scyclone(pl.LightningModule):
             # "m is a parameter of the hinge loss and is set to (...) 0.5 in our experiments" in Scyclone paper
             "hinge_offset_D": 0.5,
             "learning_rate": 2.0 * 1e-4,
+            "sampling_rate": sampling_rate
         }
         self.save_hyperparameters()
 
@@ -179,7 +180,7 @@ class Scyclone(pl.LightningModule):
                 "Validation/A2B",
                 torch.reshape(a2b / scaler_a2b, (1, -1)),
                 global_step=self.current_epoch,
-                sample_rate=16000,
+                sample_rate=self.hparams["sampling_rate"],
             )
             b2a = out["wave"]["Validation/B2A"][i]
             max_b2a = torch.max(b2a, 0, keepdim=True).values
@@ -189,7 +190,7 @@ class Scyclone(pl.LightningModule):
                 "Validation/B2A",
                 torch.reshape(b2a / scaler_b2a, (1, -1)),
                 global_step=self.current_epoch,
-                sample_rate=16000,
+                sample_rate=self.hparams["sampling_rate"],
             )
         # loss logging
         for gd in ["G", "D"]:

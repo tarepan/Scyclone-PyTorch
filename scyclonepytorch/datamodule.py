@@ -23,6 +23,7 @@ class DataLoaderPerformance(NamedTuple):
 class NonParallelSpecDataModule(LightningDataModule):
     def __init__(
         self,
+        sampling_rate: int,
         batch_size: int = 64,
         performance: DataLoaderPerformance = DataLoaderPerformance(4, True),
     ):
@@ -30,13 +31,14 @@ class NonParallelSpecDataModule(LightningDataModule):
         self.batch_size = batch_size
         self._num_worker = performance.num_workers
         self._pin_memory = performance.pin_memory
+        self._sampling_rate = sampling_rate
 
     def prepare_data(self, *args, **kwargs) -> None:
-        NonParallelSpecBigDataset(train=True)
+        NonParallelSpecBigDataset(train=True, sampling_rate=self._sampling_rate)
 
     def setup(self, stage: Optional[str] = None):
         if stage == "fit" or stage is None:
-            dataset_full = NonParallelSpecBigDataset(train=True)
+            dataset_full = NonParallelSpecBigDataset(train=True, sampling_rate=self._sampling_rate)
             # use modulo for validation (#training become batch*N)
             n_full = len(dataset_full)
             mod = n_full % self.batch_size
@@ -45,7 +47,7 @@ class NonParallelSpecDataModule(LightningDataModule):
             )
             self.batch_size_val = mod
         if stage == "test" or stage is None:
-            self.dataset_test = NonParallelSpecBigDataset(train=False)
+            self.dataset_test = NonParallelSpecBigDataset(train=False, sampling_rate=self._sampling_rate)
             self.batch_size_test = self.batch_size
 
     def train_dataloader(self):
@@ -124,9 +126,12 @@ class NonParallelSpecDataset(Dataset):
 
 
 class NonParallelSpecBigDataset(Dataset):
-    def __init__(self, train: bool):
+    def __init__(self, train: bool, sampling_rate: int):
+        """Non-parallel spectrogram dataset with large datasets.
+        """
+        # Design Note:
+        #   Sampling rates of dataset A and B should match, so `sampling_rate` is not a optional, but required argument.
 
-        resampled_sr = 16000
         if train:
             subtypes_a = ["basic5000"]
             subtypes_b = ["short-form/basic5000"]
@@ -137,12 +142,12 @@ class NonParallelSpecBigDataset(Dataset):
         self.datasetA = JSUT_spec(train, download_corpus=True, transform=pad_clip, subtypes=subtypes_a,
             # corpus_adress=,
             # dataset_adress=,
-            resample_sr=resampled_sr
+            resample_sr=sampling_rate
         )
         self.datasetB = JSSS_spec(train, download_corpus=True, transform=pad_clip, subtypes=subtypes_b,
             # corpus_adress=,
             # dataset_adress=,
-            resample_sr=resampled_sr
+            resample_sr=sampling_rate
         )
 
     def __getitem__(self, n: int):

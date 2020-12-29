@@ -20,7 +20,12 @@ def main_train():
 
     # Datamodule
     loader_perf = DataLoaderPerformance(args_scpt.num_workers, not args_scpt.no_pin_memory)
-    datamodule = NonParallelSpecDataModule(args_scpt.sampling_rate, 64, loader_perf)
+    datamodule = NonParallelSpecDataModule(
+        args_scpt.sampling_rate,
+        64,
+        loader_perf,
+        adress_data_root=None if args_scpt.adress_data_root is "None" else args_scpt.adress_data_root,
+    )
 
     # Train
     train(args_scpt, datamodule)

@@ -277,7 +277,7 @@ tqdm = "^4.54.1"
 type = "git"
 url = "https://github.com/tarepan/jsss.git"
 reference = "main"
-resolved_reference = "6031276c7c814e901d42a63c18a4f4fac0f7c0f1"
+resolved_reference = "27e57bab10e5f6f9a8c6ef267a7d92dbb48ae9fd"
 
 [[package]]
 name = "jsut"
@@ -299,7 +299,7 @@ torchaudio = "^0.7.0"
 type = "git"
 url = "https://github.com/tarepan/jsut.git"
 reference = "main"
-resolved_reference = "e4a0f31c97bb749177cdeaaed0c2751fc0037454"
+resolved_reference = "4a74269a256a1cff077b80b1a5a183557b4a86bc"
 
 [[package]]
 name = "markdown"

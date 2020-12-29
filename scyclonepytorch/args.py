@@ -19,6 +19,7 @@ def parseArgments(
     parser.add_argument("--sampling_rate", default=16000, type=int)
     parser.add_argument("--no_amp", action="store_true")
     parser.add_argument("--val_interval_epoch", default=50, type=int)
+    parser.add_argument("--adress_data_root", default="None", type=str)
     # DataLoaderPerformance
     parser.add_argument("--num_workers", default=2, type=int)
     parser.add_argument("--no_pin_memory", action="store_true")

@@ -1,23 +1,37 @@
-from typing import NamedTuple, Optional
+from typing import Optional
+from os import cpu_count
+
 import torch
 from torch.tensor import Tensor
 from torch.utils.data import Dataset
 from torch.utils.data import random_split, DataLoader
 from pytorch_lightning import LightningDataModule
-
 # currently there is no stub in npvcc2016
 from npvcc2016.PyTorch.dataset.spectrogram import NpVCC2016_spec  # type: ignore
 from jsut.PyTorch.dataset.spectrogram import JSUT_spec
 from jsss.PyTorch.dataset.spectrogram import JSSS_spec
 
-class DataLoaderPerformance(NamedTuple):
-    """
+
+class DataLoaderPerformance:
+    """PyTorch DataLoader performance configs.
+
     All attributes which affect performance of [torch.utils.data.DataLoader][^DataLoader] @ v1.6.0
     [^DataLoader]:https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader
     """
 
-    num_workers: int
-    pin_memory: bool
+    def __init__(self, num_workers: Optional[int] = None, pin_memory: bool = True) -> None:
+        """Default: num_workers == cpu_count & pin_memory == True
+        """
+
+        # Design Note:
+        #   Current performance is for single GPU training.
+        #   cpu_count() is not appropriate under the multi-GPU condition.
+
+        if num_workers is None:
+            c = cpu_count()
+            num_workers = c if c is not None else 0
+        self.num_workers: int = num_workers
+        self.pin_memory: bool = pin_memory
 
 
 class NonParallelSpecDataModule(LightningDataModule):
@@ -25,14 +39,18 @@ class NonParallelSpecDataModule(LightningDataModule):
         self,
         sampling_rate: int,
         batch_size: int = 64,
-        performance: DataLoaderPerformance = DataLoaderPerformance(4, True),
+        performance: Optional[DataLoaderPerformance] = None,
         adress_data_root: Optional[str] = None,
     ):
         super().__init__()
+        self._sampling_rate = sampling_rate
         self.batch_size = batch_size
+
+        if performance is None:
+            performance = DataLoaderPerformance()
         self._num_worker = performance.num_workers
         self._pin_memory = performance.pin_memory
-        self._sampling_rate = sampling_rate
+
         self._adress_dir_corpuses = f"{adress_data_root}/corpuses" if adress_data_root else None
         self._adress_dir_datasets = f"{adress_data_root}/datasets" if adress_data_root else None
 

@@ -23,6 +23,6 @@ def parseArgments(
     # DataLoaderPerformance
     parser.add_argument("--num_workers", type=int)
     parser.add_argument("--no_pin_memory", action="store_true")
-    parser.add_argument("--profiler", action="store_true")
+    parser.add_argument("--profiler", type=str, choices=["simple", "advanced"])
 
     return parser.parse_args() if input is None else parser.parse_args(input)

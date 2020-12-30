@@ -35,7 +35,7 @@ def train(args: Namespace, datamodule: LightningDataModule) -> None:
             ckptAndLogging.save_dir, ckptAndLogging.name, ckptAndLogging.version
         ),
         # reload_dataloaders_every_epoch=True,
-        profiler=AdvancedProfiler() if args.profiler else None,
+        profiler=args.profiler,
         progress_bar_refresh_rate=30
     )
 

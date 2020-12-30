@@ -162,12 +162,12 @@ class NonParallelSpecBigDataset(Dataset):
 
         self.datasetA = JSUT_spec(train, download_corpus=True, transform=pad_clip, subtypes=subtypes_a,
             corpus_adress=corpus_archive_JSUT,
-            dataset_adress=dataset_dir_JSUT_spec,
+            dataset_dir_adress=dataset_dir_JSUT_spec,
             resample_sr=sampling_rate
         )
         self.datasetB = JSSS_spec(train, download_corpus=True, transform=pad_clip, subtypes=subtypes_b,
             corpus_adress=corpus_archive_JSSS,
-            dataset_adress=dataset_dir_JSSS_spec,
+            dataset_dir_adress=dataset_dir_JSSS_spec,
             resample_sr=sampling_rate
         )
 
